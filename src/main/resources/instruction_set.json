@@ -1,0 +1,624 @@
+{
+    "standard": {
+        "aba": {
+            "INH": "1B"
+        },
+        "abx": {
+            "INH": "3A"
+        },
+        "aby": {
+            "INH": "18 3A"
+        },
+        "adca": {
+            "IMM": "89",
+            "DIR": "99",
+            "IND,X": "A9",
+            "IND,Y": "18 A9",
+            "EXT": "B9"
+        },
+        "adcb": {
+            "IMM": "C9",
+            "DIR": "D9",
+            "IND,X": "E9",
+            "IND,Y": "18 E9",
+            "EXT": "F9"
+        },
+        "adda": {
+            "IMM": "8B",
+            "DIR": "9B",
+            "IND,X": "AB",
+            "IND,Y": "18 AB",
+            "EXT": "BB"
+        },
+        "addb": {
+            "IMM": "CB",
+            "DIR": "DB",
+            "IND,X": "EB",
+            "IND,Y": "18 EB",
+            "EXT": "FB"
+        },
+        "addd": {
+            "IMM": "C3",
+            "DIR": "D3",
+            "IND,X": "E3",
+            "IND,Y": "18 E3",
+            "EXT": "F3"
+        },
+        "anda": {
+            "IMM": "84",
+            "DIR": "94",
+            "IND,X": "B4",
+            "IND,Y": "18 A4",
+            "EXT": "B4"
+        },
+        "andb": {
+            "IMM": "C4",
+            "DIR": "D4",
+            "IND,X": "E4",
+            "IND,Y": "18 E4",
+            "EXT": "F4"
+        },
+        "asl": {
+            "IND,X": "68",
+            "IND,Y": "18 68",
+            "EXT": "78"
+        },
+        "asla": {
+            "INH": "48"
+        },
+        "aslb": {
+            "INH": "58"
+        },
+        "asld": {
+            "INH": "5"
+        },
+        "asr": {
+            "IND,X": "67",
+            "IND,Y": "18 67",
+            "EXT": "77"
+        },
+        "asra": {
+            "INH": "47"
+        },
+        "asrb": {
+            "INH": "57"
+        },
+        "bcc": {
+            "REL": "24"
+        },
+        "bcs": {
+            "REL": "25"
+        },
+        "beq": {
+            "REL": "27"
+        },
+        "bge": {
+            "REL": "2C"
+        },
+        "bgt": {
+            "REL": "2E"
+        },
+        "bhi": {
+            "REL": "22"
+        },
+        "bhs": {
+            "REL": "24"
+        },
+        "bita": {
+            "IMM": "85",
+            "DIR": "95",
+            "IND,X": "A5",
+            "IND,Y": "18 A5",
+            "EXT": "B5"
+        },
+        "bitb": {
+            "IMM": "C5",
+            "DIR": "D5",
+            "IND,X": "E5",
+            "IND,Y": "18 E5",
+            "EXT": "F5"
+        },
+        "ble": {
+            "REL": "2F"
+        },
+        "blo": {
+            "REL": "25"
+        },
+        "bls": {
+            "REL": "23"
+        },
+        "blt": {
+            "REL": "2D"
+        },
+        "bmi": {
+            "REL": "2B"
+        },
+        "bne": {
+            "REL": "26"
+        },
+        "bpl": {
+            "REL": "2A"
+        },
+        "bra": {
+            "REL": "20"
+        },
+        "brn": {
+            "REL": "21"
+        },
+        "bsr": {
+            "REL": "8D"
+        },
+        "bvc": {
+            "REL": "28"
+        },
+        "bvs": {
+            "REL": "29"
+        },
+        "cba": {
+            "INH": "11"
+        },
+        "clc": {
+            "INH": "0C"
+        },
+        "cli": {
+            "INH": "0E"
+        },
+        "clr": {
+            "IND,X": "6F",
+            "IND,Y": "18 6F",
+            "EXT": "7F"
+        },
+        "clra": {
+            "INH": "4F"
+        },
+        "clrb": {
+            "INH": "5F"
+        },
+        "clv": {
+            "INH": "0A"
+        },
+        "cmpa": {
+            "IMM": "81",
+            "DIR": "91",
+            "IND,X": "A1",
+            "IND,Y": "18 A1",
+            "EXT": "B1"
+        },
+        "cmpb": {
+            "IMM": "C1",
+            "DIR": "D1",
+            "IND,X": "E1",
+            "IND,Y": "18 E1",
+            "EXT": "F1"
+        },
+        "com": {
+            "IND,X": "63",
+            "IND,Y": "18 63",
+            "EXT": "73"
+        },
+        "coma": {
+            "INH": "43"
+        },
+        "comb": {
+            "INH": "53"
+        },
+        "cpd": {
+            "IMM": "1A 83",
+            "DIR": "1A 93",
+            "IND,X": "1A A3",
+            "IND,Y": "CD A3",
+            "EXT": "1A B3"
+        },
+        "cpx": {
+            "IMM": "8C",
+            "DIR": "9C",
+            "IND,X": "AC",
+            "IND,Y": "CD AC",
+            "EXT": "BC"
+        },
+        "cpy": {
+            "IMM": "18 8C",
+            "DIR": "18 9C",
+            "IND,X": "1A AC",
+            "IND,Y": "18 AC",
+            "EXT": "18 BC"
+        },
+        "daa": {
+            "INH": "19"
+        },
+        "dec": {
+            "IND,X": "6A",
+            "IND,Y": "18 6A",
+            "EXT": "7A"
+        },
+        "deca": {
+            "INH": "4A"
+        },
+        "decb": {
+            "INH": "5A"
+        },
+        "des": {
+            "INH": "34"
+        },
+        "dex": {
+            "INH": "0 9"
+        },
+        "dey": {
+            "INH": "18 09"
+        },
+        "eora": {
+            "IMM": "88",
+            "DIR": "98",
+            "IND,X": "A8",
+            "IND,Y": "18 A8",
+            "EXT": "B8"
+        },
+        "eorb": {
+            "IMM": "C8",
+            "DIR": "D8",
+            "IND,X": "E8",
+            "IND,Y": "18 E8",
+            "EXT": "F8"
+        },
+        "fdiv": {
+            "INH": "0 3"
+        },
+        "idiv": {
+            "INH": "0 2"
+        },
+        "inc": {
+            "IND,X": "6C",
+            "IND,Y": "18 6C",
+            "EXT": "7C"
+        },
+        "inca": {
+            "INH": "4C"
+        },
+        "incb": {
+            "INH": "5C"
+        },
+        "ins": {
+            "INH": "31"
+        },
+        "inx": {
+            "INH": "0 8"
+        },
+        "iny": {
+            "INH": "18 08"
+        },
+        "jmp": {
+            "IND,X": "6E",
+            "IND,Y": "18 6E",
+            "EXT": "7E"
+        },
+        "jsr": {
+            "DIR": "9D",
+            "IND,X": "AD",
+            "IND,Y": "18 AD",
+            "EXT": "BD"
+        },
+        "ldaa": {
+            "IMM": "86",
+            "DIR": "96",
+            "IND,X": "A6",
+            "IND,Y": "18 A6",
+            "EXT": "B6"
+        },
+        "ldab": {
+            "IMM": "C6",
+            "DIR": "D6",
+            "IND,X": "E6",
+            "IND,Y": "18 E6",
+            "EXT": "F6"
+        },
+        "ldd": {
+            "IMM": "CC",
+            "DIR": "DC",
+            "IND,X": "EC",
+            "IND,Y": "18 EC",
+            "EXT": "FC"
+        },
+        "lds": {
+            "IMM": "8E",
+            "DIR": "9E",
+            "IND,X": "AE",
+            "IND,Y": "18 AE",
+            "EXT": "BE"
+        },
+        "ldx": {
+            "IMM": "CE",
+            "DIR": "DE",
+            "IND,X": "EE",
+            "IND,Y": "CD EE",
+            "EXT": "FE"
+        },
+        "ldy": {
+            "IMM": "18 CE",
+            "DIR": "18 DE",
+            "IND,X": "1A EE",
+            "IND,Y": "18 EE",
+            "EXT": "18 FE"
+        },
+        "lsl": {
+            "IND,X": "68",
+            "IND,Y": "18 68",
+            "EXT": "78"
+        },
+        "lsla": {
+            "INH": "48"
+        },
+        "lslb": {
+            "INH": "58"
+        },
+        "lsld": {
+            "INH": "0 5"
+        },
+        "lsr": {
+            "IND,X": "64",
+            "IND,Y": "18 64",
+            "EXT": "74"
+        },
+        "lsra": {
+            "INH": "44"
+        },
+        "lsrb": {
+            "INH": "54"
+        },
+        "lsrd": {
+            "INH": "0 4"
+        },
+        "mul": {
+            "INH": "3D"
+        },
+        "neg": {
+            "IND,X": "60",
+            "IND,Y": "18 60",
+            "EXT": "70"
+        },
+        "nega": {
+            "INH": "40"
+        },
+        "negb": {
+            "INH": "50"
+        },
+        "nop": {
+            "INH": "0 1"
+        },
+        "oraa": {
+            "IMM": "8A",
+            "DIR": "9A",
+            "IND,X": "AA",
+            "IND,Y": "18 AA",
+            "EXT": "BA"
+        },
+        "orab": {
+            "IMM": "CA",
+            "DIR": "DA",
+            "IND,X": "EA",
+            "IND,Y": "18 EA",
+            "EXT": "FA"
+        },
+        "psha": {
+            "INH": "36"
+        },
+        "pshb": {
+            "INH": "37"
+        },
+        "pshx": {
+            "INH": "3C"
+        },
+        "pshy": {
+            "INH": "18 3C"
+        },
+        "pula": {
+            "INH": "32"
+        },
+        "pulb": {
+            "INH": "33"
+        },
+        "pulx": {
+            "INH": "38"
+        },
+        "puly": {
+            "INH": "18 38"
+        },
+        "rol": {
+            "IND,X": "69",
+            "IND,Y": "18 69",
+            "EXT": "79"
+        },
+        "rola": {
+            "INH": "49"
+        },
+        "rolb": {
+            "INH": "59"
+        },
+        "ror": {
+            "IND,X": "66",
+            "IND,Y": "18 66",
+            "EXT": "76"
+        },
+        "rora": {
+            "INH": "46"
+        },
+        "rorb": {
+            "INH": "56"
+        },
+        "rti": {
+            "INH": "3B"
+        },
+        "rts": {
+            "INH": "39"
+        },
+        "sba": {
+            "INH": "10"
+        },
+        "sbca": {
+            "IMM": "82",
+            "DIR": "92",
+            "IND,X": "A2",
+            "IND,Y": "18 A2",
+            "EXT": "B2"
+        },
+        "sbcb": {
+            "IMM": "C2",
+            "DIR": "D2",
+            "IND,X": "E2",
+            "IND,Y": "18 E2",
+            "EXT": "F2"
+        },
+        "sec": {
+            "INH": "OD"
+        },
+        "sei": {
+            "INH": "OF"
+        },
+        "sev": {
+            "INH": "OB"
+        },
+        "staa": {
+            "DIR": "97",
+            "IND,X": "A7",
+            "IND,Y": "18A 7",
+            "EXT": "B7"
+        },
+        "stab": {
+            "DIR": "D7",
+            "IND,X": "E7",
+            "IND,Y": "18 E7",
+            "EXT": "F7"
+        },
+        "std": {
+            "DIR": "DD",
+            "IND,X": "ED",
+            "IND,Y": "18 ED",
+            "EXT": "FD"
+        },
+        "stop": {
+            "INH": "CF"
+        },
+        "sts": {
+            "DIR": "9F",
+            "IND,X": "AF",
+            "IND,Y": "18 AF",
+            "EXT": "BF"
+        },
+        "stx": {
+            "DIR": "DF",
+            "IND,X": "EF",
+            "IND,Y": "CD EF",
+            "EXT": "FF"
+        },
+        "sty": {
+            "DIR": "18 DF",
+            "IND,X": "1A EF",
+            "IND,Y": "18 EF",
+            "EXT": "FF"
+        },
+        "suba": {
+            "IMM": "80",
+            "DIR": "90",
+            "IND,X": "A0",
+            "IND,Y": "18 A0",
+            "EXT": "B0"
+        },
+        "subb": {
+            "IMM": "C0",
+            "DIR": "D0",
+            "IND,X": "E0",
+            "IND,Y": "18 E0",
+            "EXT": "F0"
+        },
+        "subd": {
+            "IMM": "83",
+            "DIR": "93",
+            "IND,X": "A3",
+            "IND,Y": "18 A3",
+            "EXT": "B3"
+        },
+        "swi": {
+            "INH": "3F"
+        },
+        "tab": {
+            "INH": "16"
+        },
+        "tap": {
+            "INH": "0 6"
+        },
+        "tba": {
+            "INH": "17"
+        },
+        "tets": {
+            "INH": "0 0"
+        },
+        "tpa": {
+            "INH": "0 7"
+        },
+        "tst": {
+            "IND,X": "6D",
+            "IND,Y": "18 6D",
+            "EXT": "7D"
+        },
+        "tsta": {
+            "INH": "4D"
+        },
+        "tstb": {
+            "INH": "5D"
+        },
+        "tsx": {
+            "INH": "30"
+        },
+        "tsy": {
+            "INH": "18 30"
+        },
+        "txs": {
+            "INH": "35"
+        },
+        "tys": {
+            "INH": "18 35"
+        },
+        "wai": {
+            "INH": "3E"
+        },
+        "xgdx": {
+            "INH": "8F"
+        },
+        "xgdy": {
+            "INH": "18 8F"
+        }
+    },
+    "exceptions": {
+        "brclr": {
+            "operands": 3,
+            "addressing_modes": {
+                "DIR": "13",
+                "IND,X": "1F",
+                "IND,Y": "18 1F"
+            }
+        },
+        "brset": {
+            "operands": 3,
+            "addressing_modes": {
+                "DIR": "12",
+                "IND,X": "1E",
+                "IND,Y": "18 1E"
+            }
+        },
+        "bclr": {
+            "operands": 2,
+            "addressing_modes": {
+                "DIR": "15",
+                "IND,X": "1D",
+                "IND,Y": "18 1D"
+            }
+        },
+        "bset": {
+            "operands": 2,
+            "addressing_modes": {
+                "DIR": "14",
+                "IND,X": "1C",
+                "IND,Y": "18 1C"
+            }
+        }
+    }
+}

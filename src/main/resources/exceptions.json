@@ -1,0 +1,34 @@
+{
+    "brclr": {
+        "operands": 3,
+        "addressing_modes": {
+            "DIR": "13",
+            "IND,X": "1F",
+            "IND,Y": "18 1F"
+        }
+    },
+    "brset": {
+        "operands": 3,
+        "addressing_modes": {
+            "DIR": "12",
+            "IND,X": "1E",
+            "IND,Y": "18 1E"
+        }
+    },
+    "bclr": {
+        "operands": 2,
+        "addressing_modes": {
+            "DIR": "15",
+            "IND,X": "1D",
+            "IND,Y": "18 1D"
+        }
+    },
+    "bset": {
+        "operands": 2,
+        "addressing_modes": {
+            "DIR": "14",
+            "IND,X": "1C",
+            "IND,Y": "18 1C"
+        }
+    }
+}
