@@ -12,3 +12,6 @@ buildNumber.properties
 .idea
 *.iml
 venv
+*.asc
+*.S19
+*.LST

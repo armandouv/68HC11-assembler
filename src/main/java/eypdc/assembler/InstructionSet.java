@@ -9,17 +9,26 @@ import java.util.Map;
 import java.util.Objects;
 
 @Data
-public class InstructionSet {
+public class InstructionSet
+{
 
     private Map<String, Map<String, String>> standard;
     private Map<String, SpecialInstructionInfo> exceptions;
 
-    public static InstructionSet parseFromJson(String filename) throws IOException {
+    public static InstructionSet parseFromJson(String filename)
+    {
         ClassLoader classLoader = InstructionSet.class.getClassLoader();
         String path = Objects.requireNonNull(classLoader.getResource("instruction_set.json")).getFile();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(new File(path), InstructionSet.class);
+        try
+        {
+            return objectMapper.readValue(new File(path), InstructionSet.class);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Could not open instruction set file", e);
+        }
     }
 
     @Data
