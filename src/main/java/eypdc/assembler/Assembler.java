@@ -5,6 +5,7 @@ import eypdc.assembler.errors.CompileError;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,14 +26,17 @@ public class Assembler
         Assembler assembler = new Assembler();
         List<String> lines;
 
-        try
+        try (BufferedReader inputStream = new BufferedReader(new FileReader(sourcePath)))
         {
-            BufferedReader inputStream = new BufferedReader(new FileReader(sourcePath));
             lines = inputStream.lines().collect(Collectors.toList());
         }
         catch (FileNotFoundException e)
         {
-            throw new RuntimeException("Could not read input file", e);
+            throw new RuntimeException("The specified file does not exist", e);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("An error occurred while reading the input file", e);
         }
 
         List<String> rawCompiledLines = new ArrayList<>();
