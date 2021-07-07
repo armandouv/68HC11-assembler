@@ -1,6 +1,6 @@
 package eypdc.assembler.errors;
 
-public class NonexistentVariableError extends AssemblerError
+public class NonexistentVariableError extends CompileError
 {
     public NonexistentVariableError(int errorOffset)
     {

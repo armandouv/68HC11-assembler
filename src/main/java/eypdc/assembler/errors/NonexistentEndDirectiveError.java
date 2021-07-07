@@ -1,6 +1,6 @@
 package eypdc.assembler.errors;
 
-public class NonexistentEndDirectiveError extends AssemblerError
+public class NonexistentEndDirectiveError extends CompileError
 {
     public NonexistentEndDirectiveError(int errorOffset)
     {

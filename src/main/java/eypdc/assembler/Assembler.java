@@ -1,5 +1,7 @@
 package eypdc.assembler;
 
+import eypdc.assembler.errors.CompileError;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -34,19 +36,27 @@ public class Assembler
         }
 
         List<String> rawCompiledLines = new ArrayList<>();
-        Map<String, Integer> labels = assembler.firstPass(lines, rawCompiledLines);
-        assembler.secondPass(rawCompiledLines, labels);
+
+        try
+        {
+            Map<String, Integer> labels = assembler.firstPass(lines, rawCompiledLines);
+            assembler.secondPass(rawCompiledLines, labels);
+        }
+        catch (CompileError compileError)
+        {
+            compileError.printStackTrace();
+        }
 
         // TODO: Write formatted output to *.ASC and *.LST files.
 
     }
 
-    private void secondPass(List<String> outputLines, Map<String, Integer> labels)
+    private void secondPass(List<String> outputLines, Map<String, Integer> labels) throws CompileError
     {
 
     }
 
-    private Map<String, Integer> firstPass(List<String> inputLines, List<String> outputLines)
+    private Map<String, Integer> firstPass(List<String> inputLines, List<String> outputLines) throws CompileError
     {
         Map<String, Integer> labels = new HashMap<>();
 

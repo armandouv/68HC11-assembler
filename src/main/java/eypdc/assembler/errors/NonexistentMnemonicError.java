@@ -1,6 +1,6 @@
 package eypdc.assembler.errors;
 
-public class NonexistentMnemonicError extends AssemblerError
+public class NonexistentMnemonicError extends CompileError
 {
     public NonexistentMnemonicError(int errorOffset)
     {

@@ -1,6 +1,6 @@
 package eypdc.assembler.errors;
 
-public class UnnecessaryOperandError extends AssemblerError
+public class UnnecessaryOperandError extends CompileError
 {
     public UnnecessaryOperandError(int errorOffset)
     {

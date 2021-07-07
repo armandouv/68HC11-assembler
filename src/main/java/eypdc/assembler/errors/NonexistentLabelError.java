@@ -1,6 +1,6 @@
 package eypdc.assembler.errors;
 
-public class NonexistentLabelError extends AssemblerError
+public class NonexistentLabelError extends CompileError
 {
     public NonexistentLabelError(int errorOffset)
     {

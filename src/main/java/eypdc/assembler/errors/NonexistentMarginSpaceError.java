@@ -1,6 +1,6 @@
 package eypdc.assembler.errors;
 
-public class NonexistentMarginSpaceError extends AssemblerError
+public class NonexistentMarginSpaceError extends CompileError
 {
     public NonexistentMarginSpaceError(int errorOffset)
     {

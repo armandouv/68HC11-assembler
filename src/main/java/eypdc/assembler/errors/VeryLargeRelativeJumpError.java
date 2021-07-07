@@ -1,6 +1,6 @@
 package eypdc.assembler.errors;
 
-public class VeryLargeRelativeJumpError extends AssemblerError
+public class VeryLargeRelativeJumpError extends CompileError
 {
     public VeryLargeRelativeJumpError(int errorOffset)
     {

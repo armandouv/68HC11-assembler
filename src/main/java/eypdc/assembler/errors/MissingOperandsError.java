@@ -1,6 +1,6 @@
 package eypdc.assembler.errors;
 
-public class MissingOperandsError extends AssemblerError
+public class MissingOperandsError extends CompileError
 {
     public MissingOperandsError(int errorOffset)
     {

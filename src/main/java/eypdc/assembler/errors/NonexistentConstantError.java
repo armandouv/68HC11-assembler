@@ -1,6 +1,6 @@
 package eypdc.assembler.errors;
 
-public class NonexistentConstantError extends AssemblerError
+public class NonexistentConstantError extends CompileError
 {
 
     public NonexistentConstantError(int errorOffset)

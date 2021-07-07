@@ -1,6 +1,6 @@
 package eypdc.assembler.errors;
 
-public class UnsupportedOperandMagnitudeError extends AssemblerError
+public class UnsupportedOperandMagnitudeError extends CompileError
 {
     public UnsupportedOperandMagnitudeError(int errorOffset)
     {
