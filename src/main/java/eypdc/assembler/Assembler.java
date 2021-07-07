@@ -3,9 +3,11 @@ package eypdc.assembler;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Assembler
 {
@@ -19,54 +21,41 @@ public class Assembler
     public static void compile(String sourcePath)
     {
         Assembler assembler = new Assembler();
-        BufferedReader inputStream;
+        List<String> lines;
 
         try
         {
-            inputStream = new BufferedReader(new FileReader(sourcePath));
+            BufferedReader inputStream = new BufferedReader(new FileReader(sourcePath));
+            lines = inputStream.lines().collect(Collectors.toList());
         }
         catch (FileNotFoundException e)
         {
-            throw new RuntimeException("Could not open input file", e);
+            throw new RuntimeException("Could not read input file", e);
         }
 
+        List<String> rawCompiledLines = new ArrayList<>();
+        Map<String, Integer> labels = assembler.firstPass(lines, rawCompiledLines);
+        assembler.secondPass(rawCompiledLines, labels);
 
-        StringBuilder output = new StringBuilder();
-        Map<String, Integer> labels;
-        try
-        {
-            labels = assembler.firstPass(inputStream, output);
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException("Error while performing first pass", e);
-        }
-        assembler.secondPass(output, labels);
+        // TODO: Write formatted output to *.ASC and *.LST files.
 
     }
 
-    private void secondPass(StringBuilder output, Map<String, Integer> labels)
+    private void secondPass(List<String> outputLines, Map<String, Integer> labels)
     {
 
     }
 
-    private Map<String, Integer> firstPass(BufferedReader reader, StringBuilder output) throws IOException
+    private Map<String, Integer> firstPass(List<String> inputLines, List<String> outputLines)
     {
         Map<String, Integer> labels = new HashMap<>();
 
-        String line;
-        while ((line = reader.readLine()) != null)
+        for (String line : inputLines)
         {
-            if (!requiresSecondPass(line))
-                output.append(compileLine(line)).append("\n");
+            outputLines.add(compileLine(line));
         }
 
         return labels;
-    }
-
-    private boolean requiresSecondPass(String line)
-    {
-        return false;
     }
 
     private String compileLine(String target)
