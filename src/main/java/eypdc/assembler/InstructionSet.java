@@ -32,6 +32,21 @@ public class InstructionSet
         }
     }
 
+    public Map<String, String> getStandardOpcodes(String mnemonic)
+    {
+        return standard.get(mnemonic);
+    }
+
+    public SpecialInstructionInfo getSpecialInstructionInfo(String mnemonic)
+    {
+        return exceptions.get(mnemonic);
+    }
+
+    public boolean isSpecialMnemonic(String mnemonic)
+    {
+        return exceptions.containsKey(mnemonic);
+    }
+
     public boolean containsMnemonic(String mnemonic)
     {
         return (standard.containsKey(mnemonic) || exceptions.containsKey(mnemonic));

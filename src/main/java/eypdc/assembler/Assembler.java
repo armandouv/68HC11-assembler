@@ -74,6 +74,9 @@ public class Assembler
         for (int i = 0; i < inputLines.size(); i++)
         {
             String line = inputLines.get(i);
+            int commentIndex = line.indexOf('*');
+            if (commentIndex != 1) line = line.substring(0, commentIndex);
+
             if (line.isBlank())
             {
                 outputLines.add(new CompiledLine());
@@ -161,15 +164,28 @@ public class Assembler
 
 
     private CompiledLine compileLine(String[] target, int lineNumber, Map<String, Integer> constantsAndVariables)
-            throws NonexistentMnemonicError
+            throws CompileError
     {
         String mnemonic = target[0].toUpperCase();
+        int numOperands = target.length - 1;
         if (!instructionSet.containsMnemonic(mnemonic)) throw new NonexistentMnemonicError(lineNumber);
 
         CompiledLine compiledLine = new CompiledLine();
+        if (instructionSet.isSpecialMnemonic(mnemonic))
+        {
+            InstructionSet.SpecialInstructionInfo instructionInfo = instructionSet.getSpecialInstructionInfo(mnemonic);
+            int numOfSpecialOperands = instructionInfo.getOperands();
+            if (numOperands < numOfSpecialOperands) throw new MissingOperandsError(lineNumber);
+            else if (numOperands > numOfSpecialOperands) throw new UnnecessaryOperandError(lineNumber);
+        }
+
+        if (numOperands == 0) throw new MissingOperandsError(lineNumber);
+        if (numOperands > 1) throw new UnnecessaryOperandError(lineNumber);
+
 
         return compiledLine;
     }
+
 
     @Data
     private static class CompiledLine
