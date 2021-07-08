@@ -219,6 +219,44 @@ public class Assembler
             compiledLine.setSizeInBytes(getOpcodeSize(opcode) + getOperandSize(parsedOperand));
             return compiledLine;
         }
+
+        int operandSize = operand.length();
+        // IND,X and IND,Y
+        if (operandSize >= 2 && operand.charAt(operandSize - 2) == ',')
+        {
+            if (operand.charAt(operandSize - 1) != 'X' && operand.charAt(operandSize - 1) != 'Y')
+                throw new BadFormatError(lineNumber);
+            operand = operand.substring(0, operandSize - 2);
+
+            int parsedOperand;
+            try
+            {
+                parsedOperand = parseNumericLiteral(operand, lineNumber);
+            }
+            catch (NumberFormatException | NumericParsingError numberFormatException)
+            {
+                if (!constantsAndVariables.containsKey(operand)) throw new NonexistentConstantError(lineNumber);
+                parsedOperand = constantsAndVariables.get(operand);
+            }
+            if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
+
+            String opcode;
+            if (operand.charAt(operandSize - 1) == 'X')
+            {
+                if (!standardOpcodes.containsKey("IND,X")) throw new UnsupportedAddressingModeError(lineNumber);
+                opcode = standardOpcodes.get("IND,X");
+            }
+            else
+            {
+                if (!standardOpcodes.containsKey("IND,Y")) throw new UnsupportedAddressingModeError(lineNumber);
+                opcode = standardOpcodes.get("IND,Y");
+            }
+
+            compiledLine.setOpcode(opcodeStringToInt(opcode));
+            compiledLine.getOperands().add(parsedOperand);
+            compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 1);
+            return compiledLine;
+        }
         // TODO: Implement remaining addressing modes.
 
         return compiledLine;
