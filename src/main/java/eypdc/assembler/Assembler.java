@@ -149,7 +149,7 @@ public class Assembler
         return labels;
     }
 
-    private int parseNumericLiteral(String operand, int lineNumber) throws NumericParsingError
+    private int parseNumericLiteral(String operand, int lineNumber) throws NumericParsingError, NumberFormatException
     {
         if (operand.isBlank()) throw new NumericParsingError(lineNumber);
 
@@ -172,6 +172,7 @@ public class Assembler
 
         CompiledLine compiledLine = new CompiledLine();
 
+        // Exceptions
         if (instructionSet.isSpecialMnemonic(mnemonic))
         {
             InstructionSet.SpecialInstructionInfo instructionInfo = instructionSet.getSpecialInstructionInfo(mnemonic);
@@ -184,6 +185,7 @@ public class Assembler
 
         if (numOperands > 1) throw new UnnecessaryOperandError(lineNumber);
         Map<String, String> standardOpcodes = instructionSet.getStandardOpcodes(mnemonic);
+        // INH
         if (numOperands == 0)
         {
             if (!standardOpcodes.containsKey("INH")) throw new MissingOperandsError(lineNumber);
@@ -192,9 +194,40 @@ public class Assembler
             compiledLine.setSizeInBytes(getOpcodeSize(opcode));
             return compiledLine;
         }
+
+        String operand = target[1];
+        // IMM
+        if (operand.charAt(0) == '#')
+        {
+            if (!standardOpcodes.containsKey("IMM")) throw new UnsupportedAddressingModeError(lineNumber);
+
+            int parsedOperand;
+            try
+            {
+                parsedOperand = parseNumericLiteral(operand, lineNumber);
+            }
+            catch (NumberFormatException | NumericParsingError numberFormatException)
+            {
+                if (!constantsAndVariables.containsKey(operand)) throw new NonexistentConstantError(lineNumber);
+                parsedOperand = constantsAndVariables.get(operand);
+            }
+
+            if (parsedOperand > 0xFFFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
+            String opcode = standardOpcodes.get("IMM");
+            compiledLine.setOpcode(opcodeStringToInt(opcode));
+            compiledLine.getOperands().add(parsedOperand);
+            compiledLine.setSizeInBytes(getOpcodeSize(opcode) + getOperandSize(parsedOperand));
+            return compiledLine;
+        }
         // TODO: Implement remaining addressing modes.
 
         return compiledLine;
+    }
+
+    private int getOperandSize(int operand)
+    {
+        if (operand <= 0xFF) return 1;
+        else return 2;
     }
 
     private int getOpcodeSize(String opcode)
@@ -214,6 +247,7 @@ public class Assembler
         private Integer address;
         private Integer opcode;
         private List<Integer> operands = new ArrayList<>();
+        private boolean pending = false;
         private int sizeInBytes = 0;
 
         public boolean isEmpty()
