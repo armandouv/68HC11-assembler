@@ -221,7 +221,7 @@ public class Assembler
 
             if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
             compiledLine.getOperands().add(parsedOperand);
-            compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 1);
+            compiledLine.setSizeInBytes(2);
             return compiledLine;
         }
 
