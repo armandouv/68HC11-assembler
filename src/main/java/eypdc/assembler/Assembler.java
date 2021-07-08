@@ -47,6 +47,7 @@ public class Assembler
         catch (CompileError compileError)
         {
             compileError.printStackTrace();
+            // TODO: Write error to .lst file and return.
         }
 
         // TODO: Write formatted output to *.ASC and *.LST files.
@@ -143,6 +144,7 @@ public class Assembler
             outputLines.add(compiledLine);
         }
 
+        if (!hasEndDirective) throw new NonexistentEndDirectiveError(inputLines.size());
         return labels;
     }
 
