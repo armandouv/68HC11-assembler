@@ -171,19 +171,40 @@ public class Assembler
         if (!instructionSet.containsMnemonic(mnemonic)) throw new NonexistentMnemonicError(lineNumber);
 
         CompiledLine compiledLine = new CompiledLine();
+
         if (instructionSet.isSpecialMnemonic(mnemonic))
         {
             InstructionSet.SpecialInstructionInfo instructionInfo = instructionSet.getSpecialInstructionInfo(mnemonic);
             int numOfSpecialOperands = instructionInfo.getOperands();
             if (numOperands < numOfSpecialOperands) throw new MissingOperandsError(lineNumber);
             else if (numOperands > numOfSpecialOperands) throw new UnnecessaryOperandError(lineNumber);
+            // TODO: Implement
+            return compiledLine;
         }
 
-        if (numOperands == 0) throw new MissingOperandsError(lineNumber);
         if (numOperands > 1) throw new UnnecessaryOperandError(lineNumber);
-
+        Map<String, String> standardOpcodes = instructionSet.getStandardOpcodes(mnemonic);
+        if (numOperands == 0)
+        {
+            if (!standardOpcodes.containsKey("INH")) throw new MissingOperandsError(lineNumber);
+            String opcode = standardOpcodes.get("INH");
+            compiledLine.setOpcode(opcodeStringToInt(opcode));
+            compiledLine.setSizeInBytes(getOpcodeSize(opcode));
+            return compiledLine;
+        }
+        // TODO: Implement remaining addressing modes.
 
         return compiledLine;
+    }
+
+    private int getOpcodeSize(String opcode)
+    {
+        return opcode.replaceAll("\\s", "").length() / 2;
+    }
+
+    private int opcodeStringToInt(String opcode)
+    {
+        return Integer.parseUnsignedInt(opcode.replaceAll("\\s", ""), 16);
     }
 
 
