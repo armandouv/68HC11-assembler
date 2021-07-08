@@ -99,7 +99,7 @@ public class Assembler
                 if (splitLine.length > 2) throw new UnnecessaryOperandError(i);
                 if (splitLine.length == 1) throw new MissingOperandsError(i);
                 if (targetAddress != null) throw new OrgConflictError(i);
-                targetAddress = parseNumericLiteral(splitLine[1]);
+                targetAddress = parseNumericLiteral(splitLine[1], i);
                 outputLines.add(compiledLine);
                 continue;
             }
@@ -116,7 +116,7 @@ public class Assembler
             {
                 if (splitLine.length == 2) throw new MissingOperandsError(i);
                 if (splitLine.length > 3) throw new UnnecessaryOperandError(i);
-                constantsAndVariables.put(splitLine[0], parseNumericLiteral(splitLine[2]));
+                constantsAndVariables.put(splitLine[0], parseNumericLiteral(splitLine[2], i));
                 outputLines.add(compiledLine);
                 continue;
             }
@@ -127,8 +127,9 @@ public class Assembler
             {
                 if (splitLine.length > 2) throw new UnnecessaryOperandError(i);
                 if (splitLine.length == 1) throw new MissingOperandsError(i);
-                Integer formedByte = parseNumericLiteral(splitLine[1]);
+                int formedByte = parseNumericLiteral(splitLine[1], i);
                 if (formedByte > 0xFF) throw new UnsupportedOperandMagnitudeError(i);
+                compiledLine.setAddress(targetAddress);
                 compiledLine.setOpcode(formedByte);
                 compiledLine.setSizeInBytes(1);
                 outputLines.add(compiledLine);
@@ -136,7 +137,8 @@ public class Assembler
                 continue;
             }
 
-            compiledLine = compileLine(splitLine, i, constantsAndVariables, targetAddress);
+            compiledLine = compileLine(splitLine, i, constantsAndVariables);
+            compiledLine.setAddress(targetAddress);
             targetAddress += compiledLine.getSizeInBytes();
             outputLines.add(compiledLine);
         }
@@ -144,21 +146,28 @@ public class Assembler
         return labels;
     }
 
-    private Integer parseNumericLiteral(String operand) throws NumericParsingError
+    private int parseNumericLiteral(String operand, int lineNumber) throws NumericParsingError
     {
-        return 0;
+        if (operand.isBlank()) throw new NumericParsingError(lineNumber);
+
+        int result;
+        char firstChar = operand.charAt(0);
+        if (firstChar == '$') result = Integer.parseUnsignedInt(operand.substring(1), 16);
+        else if (firstChar == '%') result = Integer.parseUnsignedInt(operand.substring(1), 2);
+        else result = Integer.parseUnsignedInt(operand, 10);
+
+        return result;
     }
 
 
-    private CompiledLine compileLine(String[] target, int lineNumber, Map<String, Integer> constantsAndVariables,
-                                     int currentAddress) throws NonexistentMnemonicError
+    private CompiledLine compileLine(String[] target, int lineNumber, Map<String, Integer> constantsAndVariables)
+            throws NonexistentMnemonicError
     {
         String mnemonic = target[0].toUpperCase();
         if (!instructionSet.containsMnemonic(mnemonic)) throw new NonexistentMnemonicError(lineNumber);
 
         CompiledLine compiledLine = new CompiledLine();
 
-        compiledLine.setAddress(currentAddress);
         return compiledLine;
     }
 
