@@ -7,10 +7,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Assembler
@@ -75,7 +72,7 @@ public class Assembler
         {
             String line = inputLines.get(i);
             int commentIndex = line.indexOf('*');
-            if (commentIndex != 1) line = line.substring(0, commentIndex);
+            if (commentIndex != -1) line = line.substring(0, commentIndex);
 
             if (line.isBlank())
             {
@@ -176,10 +173,116 @@ public class Assembler
         if (instructionSet.isSpecialMnemonic(mnemonic))
         {
             InstructionSet.SpecialInstructionInfo instructionInfo = instructionSet.getSpecialInstructionInfo(mnemonic);
+            Map<String, String> specialOpcodes = instructionInfo.getAddressingModes();
             int numOfSpecialOperands = instructionInfo.getOperands();
+
+            List<String> operands = new ArrayList<>();
+            for (int i = 1; i < target.length; i++)
+            {
+                operands.addAll(Arrays.asList(target[i].split(",#")));
+            }
+            numOperands = operands.size();
+
             if (numOperands < numOfSpecialOperands) throw new MissingOperandsError(lineNumber);
             else if (numOperands > numOfSpecialOperands) throw new UnnecessaryOperandError(lineNumber);
-            // TODO: Implement
+
+            String firstOperand = operands.get(0);
+            int operandSize = firstOperand.length();
+
+            // IND,X and IND,Y
+            if (operandSize >= 2 && firstOperand.charAt(operandSize - 2) == ',')
+            {
+                if (firstOperand.charAt(operandSize - 1) != 'X' && firstOperand.charAt(operandSize - 1) != 'Y')
+                    throw new BadFormatError(lineNumber);
+                firstOperand = firstOperand.substring(0, operandSize - 2);
+
+                int parsedOperand;
+                try
+                {
+                    parsedOperand = parseNumericLiteral(firstOperand, lineNumber);
+                }
+                catch (NumberFormatException | NumericParsingError numberFormatException)
+                {
+                    if (!constantsAndVariables.containsKey(firstOperand))
+                        throw new NonexistentVariableError(lineNumber);
+                    parsedOperand = constantsAndVariables.get(firstOperand);
+                }
+                if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
+
+                String opcode;
+                if (firstOperand.charAt(operandSize - 1) == 'X')
+                {
+                    if (!specialOpcodes.containsKey("IND,X")) throw new UnsupportedAddressingModeError(lineNumber);
+                    opcode = specialOpcodes.get("IND,X");
+                }
+                else
+                {
+                    if (!specialOpcodes.containsKey("IND,Y")) throw new UnsupportedAddressingModeError(lineNumber);
+                    opcode = specialOpcodes.get("IND,Y");
+                }
+
+                compiledLine.setOpcode(opcodeStringToInt(opcode));
+                compiledLine.getOperands().add(parsedOperand);
+                compiledLine.setSizeInBytes(getOpcodeSize(opcode) + numOfSpecialOperands);
+            }
+            // DIR
+            else
+            {
+                int parsedOperand;
+                try
+                {
+                    parsedOperand = parseNumericLiteral(firstOperand, lineNumber);
+                }
+                catch (NumberFormatException | NumericParsingError numberFormatException)
+                {
+                    if (!constantsAndVariables.containsKey(firstOperand))
+                        throw new NonexistentVariableError(lineNumber);
+                    parsedOperand = constantsAndVariables.get(firstOperand);
+                }
+                if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
+
+
+                String opcode = specialOpcodes.get("DIR");
+                compiledLine.setOpcode(opcodeStringToInt(opcode));
+                compiledLine.getOperands().add(parsedOperand);
+                compiledLine.setSizeInBytes(getOpcodeSize(opcode) + numOfSpecialOperands);
+            }
+
+            String secondOperand = operands.get(1);
+            int parsedOperand;
+            try
+            {
+                parsedOperand = parseNumericLiteral(secondOperand, lineNumber);
+            }
+            catch (NumberFormatException | NumericParsingError numberFormatException)
+            {
+                if (!constantsAndVariables.containsKey(secondOperand)) throw new NonexistentVariableError(lineNumber);
+                parsedOperand = constantsAndVariables.get(secondOperand);
+            }
+            if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
+            compiledLine.getOperands().add(parsedOperand);
+
+            if (numOfSpecialOperands == 3)
+            {
+                String thirdOperand = operands.get(2);
+                try
+                {
+                    parsedOperand = parseNumericLiteral(thirdOperand, lineNumber);
+                }
+                catch (NumberFormatException | NumericParsingError numberFormatException)
+                {
+                    if (constantsAndVariables.containsKey(thirdOperand))
+                        parsedOperand = constantsAndVariables.get(thirdOperand);
+                    else
+                    {
+                        compiledLine.getPendingIndexes().put(2, thirdOperand);
+                    }
+                }
+
+                if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
+                compiledLine.getOperands().add(parsedOperand);
+            }
+
             return compiledLine;
         }
 
@@ -214,7 +317,7 @@ public class Assembler
                     parsedOperand = constantsAndVariables.get(operand);
                 else
                 {
-                    compiledLine.setPending(true);
+                    compiledLine.getPendingIndexes().put(0, operand);
                     return compiledLine;
                 }
             }
@@ -264,7 +367,7 @@ public class Assembler
             }
             catch (NumberFormatException | NumericParsingError numberFormatException)
             {
-                if (!constantsAndVariables.containsKey(operand)) throw new NonexistentConstantError(lineNumber);
+                if (!constantsAndVariables.containsKey(operand)) throw new NonexistentVariableError(lineNumber);
                 parsedOperand = constantsAndVariables.get(operand);
             }
             if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
@@ -344,7 +447,7 @@ public class Assembler
         private Integer address;
         private Integer opcode;
         private List<Integer> operands = new ArrayList<>();
-        private boolean pending = false;
+        private Map<Integer, String> pendingIndexes = new HashMap<>();
         private int sizeInBytes = 0;
 
         public boolean isEmpty()
