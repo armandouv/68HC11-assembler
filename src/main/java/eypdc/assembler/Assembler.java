@@ -195,7 +195,36 @@ public class Assembler
             return compiledLine;
         }
 
+        // 1 operand at this point
         String operand = target[1];
+        // REL
+        if (standardOpcodes.containsKey("REL"))
+        {
+            String opcode = standardOpcodes.get("REL");
+            compiledLine.setOpcode(opcodeStringToInt(opcode));
+
+            int parsedOperand;
+            try
+            {
+                parsedOperand = parseNumericLiteral(operand, lineNumber);
+            }
+            catch (NumberFormatException | NumericParsingError numberFormatException)
+            {
+                if (constantsAndVariables.containsKey(operand))
+                    parsedOperand = constantsAndVariables.get(operand);
+                else
+                {
+                    compiledLine.setPending(true);
+                    return compiledLine;
+                }
+            }
+
+            if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
+            compiledLine.getOperands().add(parsedOperand);
+            compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 1);
+            return compiledLine;
+        }
+
         // IMM
         if (operand.charAt(0) == '#')
         {
