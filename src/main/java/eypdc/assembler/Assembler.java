@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,8 @@ public class Assembler
         Assembler assembler = new Assembler();
         List<String> lines;
 
-        try (BufferedReader inputStream = new BufferedReader(new FileReader(sourcePath)))
+        try (BufferedReader inputStream = new BufferedReader(
+                new FileReader(sourcePath, Charset.forName("windows-1252"))))
         {
             lines = inputStream.lines().collect(Collectors.toList());
         }
@@ -84,11 +86,20 @@ public class Assembler
             CompiledLine compiledLine = new CompiledLine();
 
             String[] splitLine = line.strip().split(" +");
-            if (line.charAt(0) != ' ')
+            if (!line.split("")[0].matches("\\s"))
             {
+                if (splitLine.length > 1 && splitLine[1].equalsIgnoreCase("EQU"))
+                {
+                    if (splitLine.length == 2) throw new MissingOperandsError(i);
+                    if (splitLine.length > 3) throw new UnnecessaryOperandError(i);
+                    constantsAndVariables.put(splitLine[0], parseNumericLiteral(splitLine[2], i));
+                    outputLines.add(compiledLine);
+                    continue;
+                }
+
                 if (splitLine.length != 1) throw new NonexistentMarginSpaceError(i);
 
-                String label = splitLine[0];
+                String label = splitLine[0].replaceAll(":", "");
                 if (labels.containsKey(label)) throw new ExistingLabelError(i);
                 labels.put(label, i);
                 outputLines.add(compiledLine);
@@ -113,14 +124,6 @@ public class Assembler
                 continue;
             }
 
-            if (splitLine.length > 1 && splitLine[1].equalsIgnoreCase("EQU"))
-            {
-                if (splitLine.length == 2) throw new MissingOperandsError(i);
-                if (splitLine.length > 3) throw new UnnecessaryOperandError(i);
-                constantsAndVariables.put(splitLine[0], parseNumericLiteral(splitLine[2], i));
-                outputLines.add(compiledLine);
-                continue;
-            }
 
             if (targetAddress == null) throw new NonexistentOrgDirective(i);
 
@@ -165,7 +168,7 @@ public class Assembler
     private CompiledLine compileLine(String[] target, int lineNumber, Map<String, Integer> constantsAndVariables)
             throws CompileError
     {
-        String mnemonic = target[0].toUpperCase();
+        String mnemonic = target[0].toLowerCase();
         int numOperands = target.length - 1;
         if (!instructionSet.containsMnemonic(mnemonic)) throw new NonexistentMnemonicError(lineNumber);
 
@@ -196,18 +199,18 @@ public class Assembler
             {
                 if (firstOperand.charAt(operandSize - 1) != 'X' && firstOperand.charAt(operandSize - 1) != 'Y')
                     throw new BadFormatError(lineNumber);
-                firstOperand = firstOperand.substring(0, operandSize - 2);
+                String firstOperandStripped = firstOperand.substring(0, operandSize - 2);
 
                 int parsedOperand;
                 try
                 {
-                    parsedOperand = parseNumericLiteral(firstOperand, lineNumber);
+                    parsedOperand = parseNumericLiteral(firstOperandStripped, lineNumber);
                 }
                 catch (NumberFormatException | NumericParsingError numberFormatException)
                 {
-                    if (!constantsAndVariables.containsKey(firstOperand))
+                    if (!constantsAndVariables.containsKey(firstOperandStripped))
                         throw new NonexistentVariableError(lineNumber);
-                    parsedOperand = constantsAndVariables.get(firstOperand);
+                    parsedOperand = constantsAndVariables.get(firstOperandStripped);
                 }
                 if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
 
@@ -302,6 +305,7 @@ public class Assembler
 
         // 1 operand at this point
         String operand = target[1];
+        System.out.println(standardOpcodes);
         // REL
         if (standardOpcodes.containsKey("REL"))
         {
@@ -315,6 +319,7 @@ public class Assembler
             }
             catch (NumberFormatException | NumericParsingError numberFormatException)
             {
+                // TODO: Add labels to other modes
                 if (constantsAndVariables.containsKey(operand))
                     parsedOperand = constantsAndVariables.get(operand);
                 else
@@ -334,6 +339,7 @@ public class Assembler
         if (operand.charAt(0) == '#')
         {
             if (!standardOpcodes.containsKey("IMM")) throw new UnsupportedAddressingModeError(lineNumber);
+            operand = operand.substring(1);
 
             int parsedOperand;
             try
