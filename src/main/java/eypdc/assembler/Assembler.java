@@ -221,7 +221,7 @@ public class Assembler
             {
                 String thirdOperand = operands.get(2);
                 Integer parsedThirdOperand =
-                        parseNthOperandOrLabel(constantsAndVariables, compiledLine, thirdOperand, lineNumber, 2);
+                        parseNthOperandOrLabel(constantsAndVariables, compiledLine, thirdOperand, lineNumber, 2, 0xFF);
                 if (parsedThirdOperand == null) return compiledLine;
                 compiledLine.getOperands().add(parsedSecondOperand);
             }
@@ -252,7 +252,7 @@ public class Assembler
             compiledLine.setOpcode(opcodeStringToInt(opcode));
 
             Integer parsedOperand =
-                    parseOnlyOperandOrLabel(constantsAndVariables, compiledLine, operand, lineNumber);
+                    parseOnlyOperandOrLabel(constantsAndVariables, compiledLine, operand, lineNumber, 0xFF);
             if (parsedOperand == null) return compiledLine;
 
             compiledLine.getOperands().add(parsedOperand);
@@ -285,6 +285,21 @@ public class Assembler
         }
 
         // DIR and EXT
+
+        // JMP (EXT)
+        if (mnemonic.equalsIgnoreCase("JMP"))
+        {
+            Integer parsedOperand =
+                    parseOnlyOperandOrLabel(constantsAndVariables, compiledLine, operand, lineNumber, 0xFFFF);
+            if (parsedOperand == null) return compiledLine;
+
+            String opcode = standardOpcodes.get("EXT");
+            compiledLine.setOpcode(opcodeStringToInt(opcode));
+            compiledLine.getOperands().add(parsedOperand);
+            compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 2);
+            return compiledLine;
+        }
+
         int parsedOperand = parseVariable(constantsAndVariables, operand, lineNumber, 0xFFFF);
 
         // DIR
@@ -336,13 +351,6 @@ public class Assembler
         return compiledLine;
     }
 
-    private Integer parseOnlyOperandOrLabel(Map<String, Integer> constantsAndVariables, CompiledLine compiledLine,
-                                            String operand, int lineNumber)
-            throws UnsupportedOperandMagnitudeError
-    {
-        return parseNthOperandOrLabel(constantsAndVariables, compiledLine, operand, lineNumber, 0);
-    }
-
     private int parseConstant(Map<String, Integer> constantsAndVariables, String operand, int lineNumber)
             throws NonexistentConstantError, UnsupportedOperandMagnitudeError
     {
@@ -387,8 +395,15 @@ public class Assembler
         return parsedOperand;
     }
 
+    private Integer parseOnlyOperandOrLabel(Map<String, Integer> constantsAndVariables, CompiledLine compiledLine,
+                                            String operand, int lineNumber, int maxValue)
+            throws UnsupportedOperandMagnitudeError
+    {
+        return parseNthOperandOrLabel(constantsAndVariables, compiledLine, operand, lineNumber, 0, maxValue);
+    }
+
     private Integer parseNthOperandOrLabel(Map<String, Integer> constantsAndVariables, CompiledLine compiledLine,
-                                           String operand, int lineNumber, int operandIndex)
+                                           String operand, int lineNumber, int operandIndex, int maxValue)
             throws UnsupportedOperandMagnitudeError
     {
         Integer parsedOperand = null;
@@ -406,7 +421,7 @@ public class Assembler
                 compiledLine.getPendingIndexes().put(operandIndex, operand);
             }
         }
-        if (parsedOperand != null && parsedOperand > 255) throw new UnsupportedOperandMagnitudeError(lineNumber);
+        if (parsedOperand != null && parsedOperand > maxValue) throw new UnsupportedOperandMagnitudeError(lineNumber);
         return parsedOperand;
     }
 
