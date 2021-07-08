@@ -286,8 +286,38 @@ public class Assembler
             compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 1);
             return compiledLine;
         }
-        // TODO: Implement remaining addressing modes.
 
+        // DIR and EXT
+        int parsedOperand;
+        try
+        {
+            parsedOperand = parseNumericLiteral(operand, lineNumber);
+        }
+        catch (NumberFormatException | NumericParsingError numberFormatException)
+        {
+            if (!constantsAndVariables.containsKey(operand)) throw new NonexistentVariableError(lineNumber);
+            parsedOperand = constantsAndVariables.get(operand);
+        }
+
+        // DIR
+        if (parsedOperand <= 0xFF)
+        {
+            if (!standardOpcodes.containsKey("DIR")) throw new UnsupportedAddressingModeError(lineNumber);
+            String opcode = standardOpcodes.get("DIR");
+            compiledLine.setOpcode(opcodeStringToInt(opcode));
+            compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 1);
+        }
+        // EXT
+        else if (parsedOperand <= 0xFFFF)
+        {
+            if (!standardOpcodes.containsKey("EXT")) throw new UnsupportedAddressingModeError(lineNumber);
+            String opcode = standardOpcodes.get("EXT");
+            compiledLine.setOpcode(opcodeStringToInt(opcode));
+            compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 2);
+        }
+        else throw new UnsupportedOperandMagnitudeError(lineNumber);
+
+        compiledLine.getOperands().add(parsedOperand);
         return compiledLine;
     }
 
