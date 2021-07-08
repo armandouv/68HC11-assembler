@@ -77,17 +77,23 @@ public class Assembler
             int commentIndex = line.indexOf('*');
             if (commentIndex != -1) line = line.substring(0, commentIndex);
 
+            // Blank line -> empty CompiledLine
             if (line.isBlank())
             {
                 outputLines.add(new CompiledLine());
                 continue;
             }
-            if (hasEndDirective) throw new EndConflictError(i);
-            CompiledLine compiledLine = new CompiledLine();
 
+            // Line is not empty but END directive was already parsed.
+            if (hasEndDirective) throw new EndConflictError(i);
+
+            CompiledLine compiledLine = new CompiledLine();
             String[] splitLine = line.strip().split(" +");
+
+            // First character is not a blank space.
             if (!line.split("")[0].matches("\\s"))
             {
+                // Check for EQU expression.
                 if (splitLine.length > 1 && splitLine[1].equalsIgnoreCase("EQU"))
                 {
                     if (splitLine.length == 2) throw new MissingOperandsError(i);
@@ -97,14 +103,18 @@ public class Assembler
                     continue;
                 }
 
+                // If it is not a label, then it is an invalid instruction.
                 if (splitLine.length != 1) throw new NonexistentMarginSpaceError(i);
 
+                // Add label
                 String label = splitLine[0].replaceAll(":", "");
                 if (labels.containsKey(label)) throw new ExistingLabelError(i);
                 labels.put(label, i);
                 outputLines.add(compiledLine);
                 continue;
             }
+
+            // Line does have space at start, handle directives.
 
             if (splitLine[0].equalsIgnoreCase("ORG"))
             {
@@ -124,7 +134,7 @@ public class Assembler
                 continue;
             }
 
-
+            // Target address has not been defined yet through the ORG directive, but we need it to generate the object code.
             if (targetAddress == null) throw new NonexistentOrgDirective(i);
 
             if (splitLine[0].equalsIgnoreCase("FCB"))
@@ -141,27 +151,16 @@ public class Assembler
                 continue;
             }
 
+            // Line contains a mnemonic
             compiledLine = compileLine(splitLine, i, constantsAndVariables);
             compiledLine.setAddress(targetAddress);
             targetAddress += compiledLine.getSizeInBytes();
             outputLines.add(compiledLine);
         }
 
+        // Document does not contain END directive.
         if (!hasEndDirective) throw new NonexistentEndDirectiveError(inputLines.size());
         return labels;
-    }
-
-    private int parseNumericLiteral(String operand, int lineNumber) throws NumericParsingError, NumberFormatException
-    {
-        if (operand.isBlank()) throw new NumericParsingError(lineNumber);
-
-        int result;
-        char firstChar = operand.charAt(0);
-        if (firstChar == '$') result = Integer.parseUnsignedInt(operand.substring(1), 16);
-        else if (firstChar == '%') result = Integer.parseUnsignedInt(operand.substring(1), 2);
-        else result = Integer.parseUnsignedInt(operand, 10);
-
-        return result;
     }
 
 
@@ -199,53 +198,14 @@ public class Assembler
             {
                 if (firstOperand.charAt(operandSize - 1) != 'X' && firstOperand.charAt(operandSize - 1) != 'Y')
                     throw new BadFormatError(lineNumber);
-                String firstOperandStripped = firstOperand.substring(0, operandSize - 2);
 
-                int parsedOperand;
-                try
-                {
-                    parsedOperand = parseNumericLiteral(firstOperandStripped, lineNumber);
-                }
-                catch (NumberFormatException | NumericParsingError numberFormatException)
-                {
-                    if (!constantsAndVariables.containsKey(firstOperandStripped))
-                        throw new NonexistentVariableError(lineNumber);
-                    parsedOperand = constantsAndVariables.get(firstOperandStripped);
-                }
-                if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
-
-                String opcode;
-                if (firstOperand.charAt(operandSize - 1) == 'X')
-                {
-                    if (!specialOpcodes.containsKey("IND,X")) throw new UnsupportedAddressingModeError(lineNumber);
-                    opcode = specialOpcodes.get("IND,X");
-                }
-                else
-                {
-                    if (!specialOpcodes.containsKey("IND,Y")) throw new UnsupportedAddressingModeError(lineNumber);
-                    opcode = specialOpcodes.get("IND,Y");
-                }
-
-                compiledLine.setOpcode(opcodeStringToInt(opcode));
-                compiledLine.getOperands().add(parsedOperand);
-                compiledLine.setSizeInBytes(getOpcodeSize(opcode) + numOfSpecialOperands);
+                compiledLine = compileIndInstruction(constantsAndVariables, specialOpcodes, firstOperand, lineNumber,
+                                                     numOfSpecialOperands);
             }
             // DIR
             else
             {
-                int parsedOperand;
-                try
-                {
-                    parsedOperand = parseNumericLiteral(firstOperand, lineNumber);
-                }
-                catch (NumberFormatException | NumericParsingError numberFormatException)
-                {
-                    if (!constantsAndVariables.containsKey(firstOperand))
-                        throw new NonexistentVariableError(lineNumber);
-                    parsedOperand = constantsAndVariables.get(firstOperand);
-                }
-                if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
-
+                int parsedOperand = parseVariable(constantsAndVariables, firstOperand, lineNumber, 0xFF);
 
                 String opcode = specialOpcodes.get("DIR");
                 compiledLine.setOpcode(opcodeStringToInt(opcode));
@@ -254,38 +214,16 @@ public class Assembler
             }
 
             String secondOperand = operands.get(1);
-            int parsedOperand;
-            try
-            {
-                parsedOperand = parseNumericLiteral(secondOperand, lineNumber);
-            }
-            catch (NumberFormatException | NumericParsingError numberFormatException)
-            {
-                if (!constantsAndVariables.containsKey(secondOperand)) throw new NonexistentVariableError(lineNumber);
-                parsedOperand = constantsAndVariables.get(secondOperand);
-            }
-            if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
-            compiledLine.getOperands().add(parsedOperand);
+            int parsedSecondOperand = parseVariable(constantsAndVariables, secondOperand, lineNumber, 0xFF);
+            compiledLine.getOperands().add(parsedSecondOperand);
 
             if (numOfSpecialOperands == 3)
             {
                 String thirdOperand = operands.get(2);
-                try
-                {
-                    parsedOperand = parseNumericLiteral(thirdOperand, lineNumber);
-                }
-                catch (NumberFormatException | NumericParsingError numberFormatException)
-                {
-                    if (constantsAndVariables.containsKey(thirdOperand))
-                        parsedOperand = constantsAndVariables.get(thirdOperand);
-                    else
-                    {
-                        compiledLine.getPendingIndexes().put(2, thirdOperand);
-                    }
-                }
-
-                if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
-                compiledLine.getOperands().add(parsedOperand);
+                Integer parsedThirdOperand =
+                        parseNthOperandOrLabel(constantsAndVariables, compiledLine, thirdOperand, lineNumber, 2);
+                if (parsedThirdOperand == null) return compiledLine;
+                compiledLine.getOperands().add(parsedSecondOperand);
             }
 
             return compiledLine;
@@ -293,6 +231,7 @@ public class Assembler
 
         if (numOperands > 1) throw new UnnecessaryOperandError(lineNumber);
         Map<String, String> standardOpcodes = instructionSet.getStandardOpcodes(mnemonic);
+
         // INH
         if (numOperands == 0)
         {
@@ -305,31 +244,17 @@ public class Assembler
 
         // 1 operand at this point
         String operand = target[1];
-        System.out.println(standardOpcodes);
-        // REL
+
+        // REL (Does not share mnemonics)
         if (standardOpcodes.containsKey("REL"))
         {
             String opcode = standardOpcodes.get("REL");
             compiledLine.setOpcode(opcodeStringToInt(opcode));
 
-            int parsedOperand;
-            try
-            {
-                parsedOperand = parseNumericLiteral(operand, lineNumber);
-            }
-            catch (NumberFormatException | NumericParsingError numberFormatException)
-            {
-                // TODO: Add labels to other modes
-                if (constantsAndVariables.containsKey(operand))
-                    parsedOperand = constantsAndVariables.get(operand);
-                else
-                {
-                    compiledLine.getPendingIndexes().put(0, operand);
-                    return compiledLine;
-                }
-            }
+            Integer parsedOperand =
+                    parseOnlyOperandOrLabel(constantsAndVariables, compiledLine, operand, lineNumber);
+            if (parsedOperand == null) return compiledLine;
 
-            if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
             compiledLine.getOperands().add(parsedOperand);
             compiledLine.setSizeInBytes(2);
             return compiledLine;
@@ -341,18 +266,8 @@ public class Assembler
             if (!standardOpcodes.containsKey("IMM")) throw new UnsupportedAddressingModeError(lineNumber);
             operand = operand.substring(1);
 
-            int parsedOperand;
-            try
-            {
-                parsedOperand = parseNumericLiteral(operand, lineNumber);
-            }
-            catch (NumberFormatException | NumericParsingError numberFormatException)
-            {
-                if (!constantsAndVariables.containsKey(operand)) throw new NonexistentConstantError(lineNumber);
-                parsedOperand = constantsAndVariables.get(operand);
-            }
+            int parsedOperand = parseConstant(constantsAndVariables, operand, lineNumber);
 
-            if (parsedOperand > 0xFFFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
             String opcode = standardOpcodes.get("IMM");
             compiledLine.setOpcode(opcodeStringToInt(opcode));
             compiledLine.getOperands().add(parsedOperand);
@@ -366,49 +281,11 @@ public class Assembler
         {
             if (operand.charAt(operandSize - 1) != 'X' && operand.charAt(operandSize - 1) != 'Y')
                 throw new BadFormatError(lineNumber);
-            operand = operand.substring(0, operandSize - 2);
-
-            int parsedOperand;
-            try
-            {
-                parsedOperand = parseNumericLiteral(operand, lineNumber);
-            }
-            catch (NumberFormatException | NumericParsingError numberFormatException)
-            {
-                if (!constantsAndVariables.containsKey(operand)) throw new NonexistentVariableError(lineNumber);
-                parsedOperand = constantsAndVariables.get(operand);
-            }
-            if (parsedOperand > 0xFF) throw new UnsupportedOperandMagnitudeError(lineNumber);
-
-            String opcode;
-            if (operand.charAt(operandSize - 1) == 'X')
-            {
-                if (!standardOpcodes.containsKey("IND,X")) throw new UnsupportedAddressingModeError(lineNumber);
-                opcode = standardOpcodes.get("IND,X");
-            }
-            else
-            {
-                if (!standardOpcodes.containsKey("IND,Y")) throw new UnsupportedAddressingModeError(lineNumber);
-                opcode = standardOpcodes.get("IND,Y");
-            }
-
-            compiledLine.setOpcode(opcodeStringToInt(opcode));
-            compiledLine.getOperands().add(parsedOperand);
-            compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 1);
-            return compiledLine;
+            return compileIndInstruction(constantsAndVariables, standardOpcodes, operand, lineNumber, 1);
         }
 
         // DIR and EXT
-        int parsedOperand;
-        try
-        {
-            parsedOperand = parseNumericLiteral(operand, lineNumber);
-        }
-        catch (NumberFormatException | NumericParsingError numberFormatException)
-        {
-            if (!constantsAndVariables.containsKey(operand)) throw new NonexistentVariableError(lineNumber);
-            parsedOperand = constantsAndVariables.get(operand);
-        }
+        int parsedOperand = parseVariable(constantsAndVariables, operand, lineNumber, 0xFFFF);
 
         // DIR
         if (parsedOperand <= 0xFF)
@@ -419,17 +296,131 @@ public class Assembler
             compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 1);
         }
         // EXT
-        else if (parsedOperand <= 0xFFFF)
+        else // (parsedOperand <= 0xFFFF)
         {
             if (!standardOpcodes.containsKey("EXT")) throw new UnsupportedAddressingModeError(lineNumber);
             String opcode = standardOpcodes.get("EXT");
             compiledLine.setOpcode(opcodeStringToInt(opcode));
             compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 2);
         }
-        else throw new UnsupportedOperandMagnitudeError(lineNumber);
 
         compiledLine.getOperands().add(parsedOperand);
         return compiledLine;
+    }
+
+    private CompiledLine compileIndInstruction(Map<String, Integer> constantsAndVariables, Map<String, String> opcodes,
+                                               String operand, int lineNumber, int operandsSizeInBytes)
+            throws UnsupportedOperandMagnitudeError, NonexistentVariableError, UnsupportedAddressingModeError
+    {
+        CompiledLine compiledLine = new CompiledLine();
+        int operandSize = operand.length();
+
+        String strippedOperand = operand.substring(0, operandSize - 2);
+        int parsedOperand = parseVariable(constantsAndVariables, strippedOperand, lineNumber, 0xFF);
+
+        String opcode;
+        if (operand.charAt(operandSize - 1) == 'X')
+        {
+            if (!opcodes.containsKey("IND,X")) throw new UnsupportedAddressingModeError(lineNumber);
+            opcode = opcodes.get("IND,X");
+        }
+        else
+        {
+            if (!opcodes.containsKey("IND,Y")) throw new UnsupportedAddressingModeError(lineNumber);
+            opcode = opcodes.get("IND,Y");
+        }
+
+        compiledLine.setOpcode(opcodeStringToInt(opcode));
+        compiledLine.getOperands().add(parsedOperand);
+        compiledLine.setSizeInBytes(getOpcodeSize(opcode) + operandsSizeInBytes);
+        return compiledLine;
+    }
+
+    private Integer parseOnlyOperandOrLabel(Map<String, Integer> constantsAndVariables, CompiledLine compiledLine,
+                                            String operand, int lineNumber)
+            throws UnsupportedOperandMagnitudeError
+    {
+        return parseNthOperandOrLabel(constantsAndVariables, compiledLine, operand, lineNumber, 0);
+    }
+
+    private int parseConstant(Map<String, Integer> constantsAndVariables, String operand, int lineNumber)
+            throws NonexistentConstantError, UnsupportedOperandMagnitudeError
+    {
+        try
+        {
+            return parseOperand(constantsAndVariables, operand, lineNumber, 65535);
+        }
+        catch (NonexistentConstantOrVariableError error)
+        {
+            throw new NonexistentConstantError(lineNumber);
+        }
+    }
+
+    private int parseVariable(Map<String, Integer> constantsAndVariables, String operand, int lineNumber, int maxValue)
+            throws NonexistentVariableError, UnsupportedOperandMagnitudeError
+    {
+        try
+        {
+            return parseOperand(constantsAndVariables, operand, lineNumber, maxValue);
+        }
+        catch (NonexistentConstantOrVariableError error)
+        {
+            throw new NonexistentVariableError(lineNumber);
+        }
+    }
+
+    private int parseOperand(Map<String, Integer> constantsAndVariables, String operand, int lineNumber, int maxValue)
+            throws UnsupportedOperandMagnitudeError, NonexistentConstantOrVariableError
+    {
+        int parsedOperand;
+        try
+        {
+            parsedOperand = parseNumericLiteral(operand, lineNumber);
+        }
+        catch (NumberFormatException | NumericParsingError numberFormatException)
+        {
+            if (!constantsAndVariables.containsKey(operand)) throw new NonexistentConstantOrVariableError(lineNumber);
+            parsedOperand = constantsAndVariables.get(operand);
+        }
+
+        if (parsedOperand > maxValue) throw new UnsupportedOperandMagnitudeError(lineNumber);
+        return parsedOperand;
+    }
+
+    private Integer parseNthOperandOrLabel(Map<String, Integer> constantsAndVariables, CompiledLine compiledLine,
+                                           String operand, int lineNumber, int operandIndex)
+            throws UnsupportedOperandMagnitudeError
+    {
+        Integer parsedOperand = null;
+        try
+        {
+            parsedOperand = parseNumericLiteral(operand, lineNumber);
+        }
+        catch (NumberFormatException | NumericParsingError numberFormatException)
+        {
+            if (constantsAndVariables.containsKey(operand))
+                parsedOperand = constantsAndVariables.get(operand);
+            else
+            {
+                // TODO: Add labels to other modes (jmp)
+                compiledLine.getPendingIndexes().put(operandIndex, operand);
+            }
+        }
+        if (parsedOperand != null && parsedOperand > 255) throw new UnsupportedOperandMagnitudeError(lineNumber);
+        return parsedOperand;
+    }
+
+    private int parseNumericLiteral(String operand, int lineNumber) throws NumericParsingError, NumberFormatException
+    {
+        if (operand.isBlank()) throw new NumericParsingError(lineNumber);
+
+        int result;
+        char firstChar = operand.charAt(0);
+        if (firstChar == '$') result = Integer.parseUnsignedInt(operand.substring(1), 16);
+        else if (firstChar == '%') result = Integer.parseUnsignedInt(operand.substring(1), 2);
+        else result = Integer.parseUnsignedInt(operand, 10);
+
+        return result;
     }
 
     private int getOperandSize(int operand)
