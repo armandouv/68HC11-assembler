@@ -58,7 +58,21 @@ public class Assembler
 
     private void secondPass(List<CompiledLine> outputLines, Map<String, Integer> labels) throws CompileError
     {
+        for (int i = 0; i < outputLines.size(); i++)
+        {
+            CompiledLine compiledLine = outputLines.get(i);
+            if (!compiledLine.isPending()) continue;
 
+            List<Integer> operands = compiledLine.getOperands();
+            Map<Integer, String> pendingIndexToLabel = compiledLine.getPendingIndexes();
+
+            for (String label : pendingIndexToLabel.values())
+            {
+                if (!labels.containsKey(label)) throw new NonexistentLabelError(i);
+                // IGNORES INDEX (REFACTOR IF NECESSARY)
+                operands.add(labels.get(label));
+            }
+        }
     }
 
     // Should LST contain all the source code even though some lines might not be mapped to an instruction?
@@ -107,9 +121,10 @@ public class Assembler
                 if (splitLine.length != 1) throw new NonexistentMarginSpaceError(i);
 
                 // Add label
+                if (targetAddress == null) throw new NonexistentOrgDirective(i);
                 String label = splitLine[0].replaceAll(":", "");
                 if (labels.containsKey(label)) throw new ExistingLabelError(i);
-                labels.put(label, i);
+                labels.put(label, targetAddress);
                 outputLines.add(compiledLine);
                 continue;
             }
@@ -417,7 +432,6 @@ public class Assembler
                 parsedOperand = constantsAndVariables.get(operand);
             else
             {
-                // TODO: Add labels to other modes (jmp)
                 compiledLine.getPendingIndexes().put(operandIndex, operand);
             }
         }
@@ -463,6 +477,11 @@ public class Assembler
         private List<Integer> operands = new ArrayList<>();
         private Map<Integer, String> pendingIndexes = new HashMap<>();
         private int sizeInBytes = 0;
+
+        public boolean isPending()
+        {
+            return !pendingIndexes.isEmpty();
+        }
 
         public boolean isEmpty()
         {
