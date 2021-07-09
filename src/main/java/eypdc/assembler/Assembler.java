@@ -68,7 +68,36 @@ public class Assembler
             return;
         }
 
-        // TODO: Write formatted output to *.ASC and *.LST files.
+        PrintWriter printerToS19;
+        try
+        {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(rawFilename + ".s19"));
+            printerToS19 = new PrintWriter(bufferedWriter);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Could not create .s19 output file");
+        }
+
+        assembler.printList(printerToLst, compiledLines, lines);
+        assembler.printObjectCode(printerToS19, compiledLines);
+    }
+
+    private void printList(PrintWriter printer, List<CompiledLine> compiledLines, List<String> originalLines)
+    {
+        if (compiledLines.size() != originalLines.size())
+            throw new RuntimeException("Compiled lines and original don't match");
+        for (int i = 0; i < compiledLines.size(); i++)
+        {
+            CompiledLine currentCompiledLine = compiledLines.get(i);
+            String currentOriginalLine = originalLines.get(i).strip();
+            printer.println(i + " : " + currentCompiledLine.getSpacedRepresentation() + " : " + currentOriginalLine);
+        }
+        printer.close();
+    }
+
+    private void printObjectCode(PrintWriter printer, List<CompiledLine> compiledLines)
+    {
 
     }
 
@@ -510,6 +539,16 @@ public class Assembler
         private List<Integer> operands = new ArrayList<>();
         private Map<Integer, String> pendingIndexes = new HashMap<>();
         private int sizeInBytes = 0;
+
+        public String getSpacedRepresentation()
+        {
+            if (isEmpty()) return "<Vacio>";
+            // TODO: Add ext flag and generate correct hex repr with sizes.
+
+            String operandsRepr = operands.stream().map(o -> Integer.toString(o, 16)).reduce("", String::concat);
+            String repr = Integer.toString(address, 16) + " (" + Integer.toString(opcode, 16) + operandsRepr + ")";
+            return repr.toUpperCase();
+        }
 
         public boolean isPending()
         {
