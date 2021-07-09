@@ -135,33 +135,26 @@ public class Assembler
     private void printObjectCode(PrintWriter printer, List<CompiledLine> compiledLines)
     {
         int lineSizeInBytes = 16;
-        StringBuilder stringBuilder = new StringBuilder();
-        int currentAddress = -1;
-        int startAddress = -1;
-        for (CompiledLine compiledLine : compiledLines)
-        {
-            if (compiledLine.isEmpty()) continue;
-            // Check if addresses are correct
-            if (startAddress == -1) startAddress = compiledLine.getAddress();
-            if (currentAddress != -1 && compiledLine.getAddress() != currentAddress)
-                throw new RuntimeException("The current address is incorrect");
+        Map<Integer, String> mergedRepresentation = CompiledLine.getMergedRepresentation(compiledLines);
+        System.out.println(mergedRepresentation);
 
-            stringBuilder.append(compiledLine.getBinaryRepresentation());
-            currentAddress = compiledLine.getAddress() + compiledLine.getSizeInBytes();
+        for (Map.Entry<Integer, String> entry : mergedRepresentation.entrySet())
+        {
+            int startAddress = entry.getKey();
+            String binaryRepresentation = entry.getValue();
+
+            int address = startAddress;
+            int totalLength = binaryRepresentation.length();
+            for (int i = 0; i < totalLength; i += lineSizeInBytes * 2)
+            {
+                int endIndex = Math.min(totalLength, i + lineSizeInBytes * 2);
+                String line = binaryRepresentation.substring(i, endIndex);
+                String spacedLine = CompiledLine.addSpaceToHexString(line);
+                printer.println("<" + Integer.toHexString(address) + "> " + spacedLine);
+                address += lineSizeInBytes;
+            }
         }
 
-        // Advance pointer line by line
-        if (startAddress == -1) throw new RuntimeException("Start address was not obtained");
-        int address = startAddress;
-        int totalLength = stringBuilder.length();
-        for (int i = 0; i < totalLength; i += lineSizeInBytes * 2)
-        {
-            int endIndex = Math.min(totalLength, i + lineSizeInBytes * 2);
-            String line = stringBuilder.substring(i, endIndex);
-            String spacedLine = CompiledLine.addSpaceToHexString(line);
-            printer.println("<" + Integer.toHexString(address) + "> " + spacedLine);
-            address += lineSizeInBytes;
-        }
         printer.close();
     }
 
@@ -199,9 +192,6 @@ public class Assembler
             }
         }
     }
-
-    // Should LST contain all the source code even though some lines might not be mapped to an instruction?
-    // What's the difference between constants and variables?
 
     private Map<String, Integer> firstPass(List<String> inputLines, List<CompiledLine> outputLines) throws CompileError
     {

@@ -16,6 +16,34 @@ public class CompiledLine
     private Map<Integer, String> pendingIndexes = new HashMap<>();
     private int sizeInBytes = 0;
 
+    public static Map<Integer, String> getMergedRepresentation(List<CompiledLine> compiledLines)
+    {
+        StringBuilder stringBuilder = new StringBuilder();
+        Map<Integer, String> startAddressToRepresentation = new HashMap<>();
+        int currentAddress = -1;
+        int startAddress = -1;
+
+        for (CompiledLine compiledLine : compiledLines)
+        {
+            if (compiledLine.isEmpty()) continue;
+            // Check if addresses are correct
+            if (startAddress == -1) startAddress = compiledLine.getAddress();
+            else if (currentAddress != -1 && compiledLine.getAddress() != currentAddress)
+            {
+                startAddressToRepresentation.put(startAddress, stringBuilder.toString());
+                stringBuilder.setLength(0);
+                startAddress = compiledLine.getAddress();
+            }
+
+            stringBuilder.append(compiledLine.getBinaryRepresentation());
+            currentAddress = compiledLine.getAddress() + compiledLine.getSizeInBytes();
+        }
+        if (startAddress == -1) throw new RuntimeException("Start address was not obtained");
+        else startAddressToRepresentation.put(startAddress, stringBuilder.toString());
+
+        return startAddressToRepresentation;
+    }
+
     public static String addSpaceToHexString(String hexString)
     {
         StringBuilder stringBuilder = new StringBuilder();
