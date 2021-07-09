@@ -97,7 +97,35 @@ public class Assembler
 
     private void printObjectCode(PrintWriter printer, List<CompiledLine> compiledLines)
     {
+        int lineSizeInBytes = 16;
+        StringBuilder stringBuilder = new StringBuilder();
+        int currentAddress = -1;
+        int startAddress = -1;
+        for (CompiledLine compiledLine : compiledLines)
+        {
+            if (compiledLine.isEmpty()) continue;
+            // Check if addresses are correct
+            if (startAddress == -1) startAddress = compiledLine.getAddress();
+            if (currentAddress != -1 && compiledLine.getAddress() != currentAddress)
+                throw new RuntimeException("The current address is incorrect");
 
+            stringBuilder.append(compiledLine.getBinaryRepresentation());
+            currentAddress = compiledLine.getAddress() + compiledLine.getSizeInBytes();
+        }
+
+        // Advance pointer line by line
+        if (startAddress == -1) throw new RuntimeException("Start address was not obtained");
+        int address = startAddress;
+        int totalLength = stringBuilder.length();
+        for (int i = 0; i < totalLength; i += lineSizeInBytes * 2)
+        {
+            int endIndex = Math.min(totalLength, i + lineSizeInBytes * 2);
+            String line = stringBuilder.substring(i, endIndex);
+            String spacedLine = CompiledLine.addSpaceToHexString(line);
+            printer.println("<" + Integer.toHexString(address) + "> " + spacedLine);
+            address += lineSizeInBytes;
+        }
+        printer.close();
     }
 
     private void secondPass(List<CompiledLine> outputLines, Map<String, Integer> labels) throws CompileError

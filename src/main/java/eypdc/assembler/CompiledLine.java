@@ -16,6 +16,19 @@ public class CompiledLine
     private Map<Integer, String> pendingIndexes = new HashMap<>();
     private int sizeInBytes = 0;
 
+    public static String addSpaceToHexString(String hexString)
+    {
+        StringBuilder stringBuilder = new StringBuilder();
+        int length = hexString.length();
+        for (int i = 0; i < length; i += 2)
+        {
+            stringBuilder.append(hexString.charAt(i));
+            if (i + 1 < length) stringBuilder.append(hexString.charAt(i + 1));
+            if (i < length - 2) stringBuilder.append(' ');
+        }
+        return stringBuilder.toString();
+    }
+
     public String getSpacedRepresentation()
     {
         if (isEmpty()) return "<Vacio>";
