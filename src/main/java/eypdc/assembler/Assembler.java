@@ -566,6 +566,7 @@ public class Assembler
         char firstChar = operand.charAt(0);
         if (firstChar == '$') result = Integer.parseUnsignedInt(operand.substring(1), 16);
         else if (firstChar == '%') result = Integer.parseUnsignedInt(operand.substring(1), 2);
+        else if (firstChar == '\'') result = Character.getNumericValue(operand.charAt(1));
         else result = Integer.parseUnsignedInt(operand, 10);
 
         return result;
