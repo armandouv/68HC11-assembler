@@ -78,8 +78,20 @@ public class Assembler
             throw new RuntimeException("Could not create .s19 output file");
         }
 
+        PrintWriter printerToColoredLst;
+        try
+        {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(rawFilename + "_lst.html"));
+            printerToColoredLst = new PrintWriter(bufferedWriter);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Could not create colored list output file");
+        }
+
         assembler.printList(printerToLst, compiledLines, lines);
         assembler.printObjectCode(printerToS19, compiledLines);
+        assembler.printColoredList(printerToColoredLst, compiledLines, lines);
     }
 
     private void printList(PrintWriter printer, List<CompiledLine> compiledLines, List<String> originalLines)
@@ -92,6 +104,31 @@ public class Assembler
             String currentOriginalLine = originalLines.get(i).strip();
             printer.println(i + " : " + currentCompiledLine.getSpacedRepresentation() + " : " + currentOriginalLine);
         }
+        printer.close();
+    }
+
+    private void printColoredList(PrintWriter printer, List<CompiledLine> compiledLines, List<String> originalLines)
+    {
+        if (compiledLines.size() != originalLines.size())
+            throw new RuntimeException("Compiled lines and original don't match");
+
+        printer.println("<style>" +
+                        "p span:nth-of-type(1) { color: red }" +
+                        "p span:nth-of-type(2) { color: blue }" +
+                        "p span:nth-of-type(3) { color: green }" +
+                        "p span:nth-of-type(4) { color: purple }" +
+                        "</style>");
+        printer.println("<div>");
+        for (int i = 0; i < compiledLines.size(); i++)
+        {
+            CompiledLine currentCompiledLine = compiledLines.get(i);
+            String currentOriginalLine = originalLines.get(i).strip();
+
+            printer.println(
+                    "<p>" + i + " : " + currentCompiledLine
+                            .getColoredSpacedRepresentation() + " : " + currentOriginalLine + "</p>");
+        }
+        printer.println("</div>");
         printer.close();
     }
 

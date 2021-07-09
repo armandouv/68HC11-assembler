@@ -65,7 +65,7 @@ public class CompiledLine
         if (value >= 0)
         {
             if (value > getMaxValueFromBytes(sizeInBytes)) throw new RuntimeException("Value does not fit size");
-            return String.format("%0" + (sizeInBytes * 2) + "x", value);
+            return String.format("%0" + (sizeInBytes * 2) + "x", value).toUpperCase();
         }
 
         // Value is negative, use two's complement
@@ -76,20 +76,47 @@ public class CompiledLine
         int length = binaryRepresentation.length();
         String trimmed = binaryRepresentation.substring(length - 8 * sizeInBytes);
         int unsignedValue = Integer.parseUnsignedInt(trimmed, 2);
-        return Integer.toHexString(unsignedValue);
+        return Integer.toHexString(unsignedValue).toUpperCase();
+    }
+
+    public List<String> getSplitBinaryRepresentation()
+    {
+        List<String> binaryRepresentation = new ArrayList<>();
+        if (isEmpty()) return binaryRepresentation;
+        String opcodeRepr = getHexRepresentation(opcode, getOpcodeSizeInBytes());
+        binaryRepresentation.add(opcodeRepr);
+
+        int operandSize = getOperandsSizeInBytes();
+        for (Integer operand : operands)
+        {
+            binaryRepresentation.add(getHexRepresentation(operand, operandSize));
+        }
+
+        return binaryRepresentation;
+    }
+
+    public String getColoredSpacedRepresentation()
+    {
+        List<String> splitRepresentation = getSplitBinaryRepresentation();
+        if (splitRepresentation.isEmpty()) return " Vacio ";
+        StringBuilder coloredRepresentation = new StringBuilder();
+
+        for (String element : splitRepresentation)
+        {
+            coloredRepresentation.append("<span>").append(element).append("</span>");
+        }
+
+        return Integer.toString(address, 16).toUpperCase() + " (" + coloredRepresentation + ")";
     }
 
     public String getBinaryRepresentation()
     {
-        String opcodeRepr = getHexRepresentation(opcode, getOpcodeSizeInBytes());
-        StringBuilder operandsRepr = new StringBuilder();
-        int operandSize = getOperandsSizeInBytes();
-        for (Integer operand : operands)
+        StringBuilder representation = new StringBuilder();
+        for (String element : getSplitBinaryRepresentation())
         {
-            operandsRepr.append(getHexRepresentation(operand, operandSize));
+            representation.append(element);
         }
-
-        return (opcodeRepr + operandsRepr).toUpperCase();
+        return representation.toString();
     }
 
     public boolean isPending()

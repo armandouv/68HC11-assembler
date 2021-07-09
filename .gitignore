@@ -17,3 +17,4 @@ venv
 *.LST
 *.s19
 *.lst
+*.html
