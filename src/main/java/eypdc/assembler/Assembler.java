@@ -218,7 +218,7 @@ public class Assembler
             }
 
             // Line does have space at start, handle directives.
-
+            // TODO: Handle multiple ORG directives
             if (splitLine[0].equalsIgnoreCase("ORG"))
             {
                 if (splitLine.length > 2) throw new UnnecessaryOperandError(i);
