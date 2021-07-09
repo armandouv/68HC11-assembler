@@ -6,6 +6,6 @@ public class CompileError extends ParseException
 {
     public CompileError(String message, int errorOffset, int errorCode)
     {
-        super("Error " + errorCode + ": " + message + " (Linea " + errorOffset + ")", errorOffset);
+        super("Error " + errorCode + ": " + message + " (Linea " + (errorOffset + 1) + ")", errorOffset);
     }
 }

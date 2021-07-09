@@ -136,7 +136,6 @@ public class Assembler
     {
         int lineSizeInBytes = 16;
         Map<Integer, String> mergedRepresentation = CompiledLine.getMergedRepresentation(compiledLines);
-        System.out.println(mergedRepresentation);
 
         for (Map.Entry<Integer, String> entry : mergedRepresentation.entrySet())
         {
@@ -245,20 +244,21 @@ public class Assembler
             }
 
             // Line does have space at start, handle directives.
-            // TODO: Handle multiple ORG directives
             if (splitLine[0].equalsIgnoreCase("ORG"))
             {
                 if (splitLine.length > 2) throw new UnnecessaryOperandError(i);
                 if (splitLine.length == 1) throw new MissingOperandsError(i);
-                if (targetAddress != null) throw new OrgConflictError(i);
                 targetAddress = parseNumericLiteral(splitLine[1], i);
                 outputLines.add(compiledLine);
                 continue;
             }
 
+            // TODO: Handle RESET
+
             if (splitLine[0].equalsIgnoreCase("END"))
             {
-                if (splitLine.length != 1) throw new UnnecessaryOperandError(i);
+                // TODO: Handle operand
+                // if (splitLine.length != 1) throw new UnnecessaryOperandError(i);
                 hasEndDirective = true;
                 outputLines.add(compiledLine);
                 continue;
@@ -271,11 +271,21 @@ public class Assembler
             {
                 if (splitLine.length > 2) throw new UnnecessaryOperandError(i);
                 if (splitLine.length == 1) throw new MissingOperandsError(i);
-                int formedByte = parseNumericLiteral(splitLine[1], i);
-                if (formedByte > 0xFF) throw new UnsupportedOperandMagnitudeError(i);
+                String[] operands = splitLine[1].split(",");
+                List<Integer> formedBytes = new ArrayList<>();
+                for (String operand : operands)
+                {
+                    int formedByte = parseNumericLiteral(operand, i);
+                    if (formedByte > 0xFF) throw new UnsupportedOperandMagnitudeError(i);
+                    formedBytes.add(formedByte);
+                }
                 compiledLine.setAddress(targetAddress);
-                compiledLine.setOpcode(formedByte);
-                compiledLine.setSizeInBytes(1);
+                compiledLine.setOpcode(formedBytes.get(0));
+                for (int formedByte : formedBytes)
+                {
+                    compiledLine.getOperands().add(formedByte);
+                }
+                compiledLine.setSizeInBytes(formedBytes.size());
                 outputLines.add(compiledLine);
                 targetAddress += compiledLine.getSizeInBytes();
                 continue;
