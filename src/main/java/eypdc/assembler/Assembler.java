@@ -89,9 +89,33 @@ public class Assembler
             throw new RuntimeException("Could not create colored list output file");
         }
 
+        PrintWriter printerToOfficialFormatS19;
+        try
+        {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(rawFilename + "_official.s19"));
+            printerToOfficialFormatS19 = new PrintWriter(bufferedWriter);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Could not create oficial format output file");
+        }
+
+        PrintWriter printerToColoredOfficialFormatS19;
+        try
+        {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(rawFilename + "_official_colored.html"));
+            printerToColoredOfficialFormatS19 = new PrintWriter(bufferedWriter);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Could not create oficial format output file");
+        }
+
         assembler.printList(printerToLst, compiledLines, lines);
         assembler.printObjectCode(printerToS19, compiledLines);
         assembler.printColoredList(printerToColoredLst, compiledLines, lines);
+        assembler.printOfficialObjectCode(printerToOfficialFormatS19, compiledLines);
+        assembler.printColoredOfficialObjectCode(printerToColoredOfficialFormatS19, compiledLines);
     }
 
     private void printList(PrintWriter printer, List<CompiledLine> compiledLines, List<String> originalLines)
@@ -154,6 +178,52 @@ public class Assembler
             }
         }
 
+        printer.close();
+    }
+
+    private void printOfficialObjectCode(PrintWriter printer, List<CompiledLine> compiledLines)
+    {
+        Map<Integer, String> mergedRepresentation = CompiledLine.getMergedRepresentation(compiledLines);
+        StringBuilder output = new StringBuilder();
+
+        output.append("S110");
+
+        for (Map.Entry<Integer, String> entry : mergedRepresentation.entrySet())
+        {
+            int startAddress = entry.getKey();
+            String compiledCode = entry.getValue();
+            output.append(startAddress).append(compiledCode);
+        }
+
+        output.append("19S9030000FC");
+
+        printer.println(output);
+        printer.close();
+    }
+
+    private void printColoredOfficialObjectCode(PrintWriter printer, List<CompiledLine> compiledLines)
+    {
+        printer.println("<style>" +
+                        ".a { color: red }" +
+                        ".b { color: blue }" +
+                        ".c { color: green }" +
+                        ".d { color: purple }" +
+                        "</style>");
+        printer.println("<p>El color rojo indica un codigo de instruccion. Los demas colores indican operandos.</p>");
+        printer.println("<p>");
+
+        StringBuilder output = new StringBuilder();
+
+        output.append("S110");
+
+        for (CompiledLine compiledLine : compiledLines)
+        {
+            output.append(compiledLine.getColoredRepresentation());
+        }
+
+        output.append("19S9030000FC").append("</p>");
+
+        printer.println(output);
         printer.close();
     }
 

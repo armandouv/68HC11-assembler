@@ -123,6 +123,24 @@ public class CompiledLine
         return binaryRepresentation;
     }
 
+    public String getColoredRepresentation()
+    {
+        List<String> splitRepresentation = getSplitBinaryRepresentation();
+        if (splitRepresentation.isEmpty()) return "";
+
+        StringBuilder coloredRepresentation = new StringBuilder();
+
+        char cssClass = 'a';
+        for (String element : splitRepresentation)
+        {
+            coloredRepresentation.append("<span class=\"").append(cssClass).append("\">")
+                    .append(element).append("</span>");
+            cssClass++;
+        }
+
+        return coloredRepresentation.toString();
+    }
+
     public String getColoredSpacedRepresentation()
     {
         List<String> splitRepresentation = getSplitBinaryRepresentation();
