@@ -1,7 +1,6 @@
 package eypdc.assembler;
 
 import eypdc.assembler.errors.*;
-import lombok.Data;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -325,6 +324,7 @@ public class Assembler
         if (standardOpcodes.containsKey("REL"))
         {
             String opcode = standardOpcodes.get("REL");
+            compiledLine.setSizeInBytes(2);
             compiledLine.setOpcode(opcodeStringToInt(opcode));
 
             Integer parsedOperand =
@@ -332,7 +332,6 @@ public class Assembler
             if (parsedOperand == null) return compiledLine;
 
             compiledLine.getOperands().add(parsedOperand);
-            compiledLine.setSizeInBytes(2);
             return compiledLine;
         }
 
@@ -531,33 +530,4 @@ public class Assembler
     }
 
 
-    @Data
-    private static class CompiledLine
-    {
-        private Integer address;
-        private Integer opcode;
-        private List<Integer> operands = new ArrayList<>();
-        private Map<Integer, String> pendingIndexes = new HashMap<>();
-        private int sizeInBytes = 0;
-
-        public String getSpacedRepresentation()
-        {
-            if (isEmpty()) return "<Vacio>";
-            // TODO: Add ext flag and generate correct hex repr with sizes.
-
-            String operandsRepr = operands.stream().map(o -> Integer.toString(o, 16)).reduce("", String::concat);
-            String repr = Integer.toString(address, 16) + " (" + Integer.toString(opcode, 16) + operandsRepr + ")";
-            return repr.toUpperCase();
-        }
-
-        public boolean isPending()
-        {
-            return !pendingIndexes.isEmpty();
-        }
-
-        public boolean isEmpty()
-        {
-            return (address == null && opcode == null && operands.isEmpty());
-        }
-    }
 }
