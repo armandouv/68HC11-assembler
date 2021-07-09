@@ -15,3 +15,5 @@ venv
 *.asc
 *.S19
 *.LST
+*.s19
+*.lst

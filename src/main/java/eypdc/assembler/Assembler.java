@@ -3,11 +3,9 @@ package eypdc.assembler;
 import eypdc.assembler.errors.*;
 import lombok.Data;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,6 +23,10 @@ public class Assembler
         Assembler assembler = new Assembler();
         List<String> lines;
 
+        String filename = Paths.get(sourcePath).getFileName().toString();
+        if (!filename.endsWith(".asc")) throw new RuntimeException("Unsupported file format (must be *.asc");
+        String rawFilename = filename.substring(0, filename.length() - 4);
+
         try (BufferedReader inputStream = new BufferedReader(
                 new FileReader(sourcePath, Charset.forName("windows-1252"))))
         {
@@ -39,6 +41,18 @@ public class Assembler
             throw new RuntimeException("An error occurred while reading the input file", e);
         }
 
+        PrintWriter printerToLst;
+        try
+        {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(rawFilename + ".lst"));
+            printerToLst = new PrintWriter(bufferedWriter);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Could not create .lst output file");
+        }
+
+
         List<CompiledLine> compiledLines = new ArrayList<>();
 
         try
@@ -49,7 +63,9 @@ public class Assembler
         catch (CompileError compileError)
         {
             compileError.printStackTrace();
-            // TODO: Write error to .lst file and return.
+            printerToLst.println(compileError.getMessage());
+            printerToLst.close();
+            return;
         }
 
         // TODO: Write formatted output to *.ASC and *.LST files.
@@ -72,6 +88,7 @@ public class Assembler
                 // IGNORES INDEX (REFACTOR IF NECESSARY)
                 operands.add(labels.get(label));
             }
+            // TODO: Check for very large jumps
         }
     }
 
