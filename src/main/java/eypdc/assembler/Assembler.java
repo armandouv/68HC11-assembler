@@ -74,6 +74,9 @@ public class Assembler
 
     private void secondPass(List<CompiledLine> outputLines, Map<String, Integer> labels) throws CompileError
     {
+        String jmpExtOpcodeString = instructionSet.getStandardOpcodes("jmp").get("EXT");
+        int jmpExtOpcode = opcodeStringToInt(jmpExtOpcodeString);
+
         for (int i = 0; i < outputLines.size(); i++)
         {
             CompiledLine compiledLine = outputLines.get(i);
@@ -86,9 +89,21 @@ public class Assembler
             {
                 if (!labels.containsKey(label)) throw new NonexistentLabelError(i);
                 // IGNORES INDEX (REFACTOR IF NECESSARY)
-                operands.add(labels.get(label));
+                int targetAddress = labels.get(label);
+
+                if (compiledLine.getOpcode().equals(jmpExtOpcode))
+                {
+                    if (targetAddress > 0xFFFF) throw new VeryLargeAbsoluteJumpError(i);
+                    operands.add(targetAddress);
+                }
+                else // Relative jump
+                {
+                    int nextAddress = compiledLine.getAddress() + compiledLine.getSizeInBytes();
+                    int jump = targetAddress - nextAddress;
+                    if (Math.abs(jump) > 0xFF) throw new VeryLargeRelativeJumpError(i);
+                    operands.add(jump);
+                }
             }
-            // TODO: Check for very large jumps
         }
     }
 
@@ -321,14 +336,15 @@ public class Assembler
         // JMP (EXT)
         if (mnemonic.equalsIgnoreCase("JMP"))
         {
+            String opcode = standardOpcodes.get("EXT");
+            compiledLine.setOpcode(opcodeStringToInt(opcode));
+            compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 2);
+
             Integer parsedOperand =
                     parseOnlyOperandOrLabel(constantsAndVariables, compiledLine, operand, lineNumber, 0xFFFF);
             if (parsedOperand == null) return compiledLine;
 
-            String opcode = standardOpcodes.get("EXT");
-            compiledLine.setOpcode(opcodeStringToInt(opcode));
             compiledLine.getOperands().add(parsedOperand);
-            compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 2);
             return compiledLine;
         }
 
