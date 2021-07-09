@@ -404,12 +404,42 @@ public class Assembler
             return compiledLine;
         }
 
+        // JSR (DIR or EXT)
+        if (mnemonic.equalsIgnoreCase("JSR"))
+        {
+            Integer parsedOperand =
+                    parseOnlyOperandOrLabel(constantsAndVariables, compiledLine, operand, lineNumber, 0xFFFF);
+            // EXT, label
+            if (parsedOperand == null)
+            {
+                String opcode = standardOpcodes.get("EXT");
+                compiledLine.setOpcode(opcodeStringToInt(opcode));
+                compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 2);
+                return compiledLine;
+            }
+            // EXT, parsed value
+            else if (parsedOperand > 0xFF)
+            {
+                String opcode = standardOpcodes.get("EXT");
+                compiledLine.setOpcode(opcodeStringToInt(opcode));
+                compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 2);
+                compiledLine.getOperands().add(parsedOperand);
+                return compiledLine;
+            }
+
+            // DIR, operand <= OxFF
+            String opcode = standardOpcodes.get("DIR");
+            compiledLine.setOpcode(opcodeStringToInt(opcode));
+            compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 1);
+            compiledLine.getOperands().add(parsedOperand);
+            return compiledLine;
+        }
+
         int parsedOperand = parseVariable(constantsAndVariables, operand, lineNumber, 0xFFFF);
 
         // DIR
-        if (parsedOperand <= 0xFF)
+        if (parsedOperand <= 0xFF && standardOpcodes.containsKey("DIR"))
         {
-            if (!standardOpcodes.containsKey("DIR")) throw new UnsupportedAddressingModeError(lineNumber);
             String opcode = standardOpcodes.get("DIR");
             compiledLine.setOpcode(opcodeStringToInt(opcode));
             compiledLine.setSizeInBytes(getOpcodeSize(opcode) + 1);
