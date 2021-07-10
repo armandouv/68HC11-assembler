@@ -71,7 +71,7 @@ public class Printer
     {
         PrintWriter printer = createOutputFile(rawFilename + ".s19");
         int maxLineSizeInBytes = 16;
-        Map<Integer, String> mergedRepresentation = CompiledLine.getMergedRepresentation(compiledLines);
+        Map<Integer, String> mergedRepresentation = CompiledLine.getMergedPlainRepresentation(compiledLines);
 
         for (Map.Entry<Integer, String> entry : mergedRepresentation.entrySet())
         {
@@ -110,7 +110,7 @@ public class Printer
     {
         PrintWriter printer = createOutputFile(rawFilename + "_official.s19");
         int maxLineSizeInBytes = 32;
-        Map<Integer, String> mergedRepresentation = CompiledLine.getMergedRepresentation(compiledLines);
+        Map<Integer, String> mergedRepresentation = CompiledLine.getMergedPlainRepresentation(compiledLines);
 
         for (Map.Entry<Integer, String> entry : mergedRepresentation.entrySet())
         {
@@ -143,8 +143,7 @@ public class Printer
 
         int maxLineSizeInBytes = 32;
         Map<Integer, String> mergedColoredRepresentation = CompiledLine.getMergedColoredRepresentation(compiledLines);
-        Map<Integer, String> mergedRepresentation = CompiledLine.getMergedRepresentation(compiledLines);
-
+        Map<Integer, String> mergedRepresentation = CompiledLine.getMergedPlainRepresentation(compiledLines);
 
         for (Map.Entry<Integer, String> entry : mergedRepresentation.entrySet())
         {

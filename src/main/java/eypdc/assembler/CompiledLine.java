@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 @Data
 public class CompiledLine
@@ -16,32 +17,29 @@ public class CompiledLine
     private Map<Integer, String> pendingIndexes = new HashMap<>();
     private int sizeInBytes = 0;
 
-    public static Map<Integer, String> getMergedRepresentation(List<CompiledLine> compiledLines)
+    private static Map<Integer, String> getMergedRepresentation(List<CompiledLine> compiledLines,
+                                                                Function<CompiledLine, String> getRepresentation)
     {
+        Map<Integer, List<CompiledLine>> listRepresentation = getListRepresentation(compiledLines);
+        Map<Integer, String> mergedRepresentation = new HashMap<>();
         StringBuilder stringBuilder = new StringBuilder();
-        Map<Integer, String> startAddressToRepresentation = new HashMap<>();
-        int currentAddress = -1;
-        int startAddress = -1;
 
-        for (CompiledLine compiledLine : compiledLines)
+        for (Map.Entry<Integer, List<CompiledLine>> entry : listRepresentation.entrySet())
         {
-            if (compiledLine.isEmpty()) continue;
-            // Check if addresses are correct
-            if (startAddress == -1) startAddress = compiledLine.getAddress();
-            else if (currentAddress != -1 && compiledLine.getAddress() != currentAddress)
+            for (CompiledLine compiledLine : entry.getValue())
             {
-                startAddressToRepresentation.put(startAddress, stringBuilder.toString());
-                stringBuilder.setLength(0);
-                startAddress = compiledLine.getAddress();
+                stringBuilder.append(getRepresentation.apply(compiledLine));
             }
-
-            stringBuilder.append(compiledLine.getBinaryRepresentation());
-            currentAddress = compiledLine.getAddress() + compiledLine.getSizeInBytes();
+            mergedRepresentation.put(entry.getKey(), stringBuilder.toString());
+            stringBuilder.setLength(0);
         }
-        if (startAddress == -1) throw new RuntimeException("Start address was not obtained");
-        else startAddressToRepresentation.put(startAddress, stringBuilder.toString());
 
-        return startAddressToRepresentation;
+        return mergedRepresentation;
+    }
+
+    public static Map<Integer, String> getMergedPlainRepresentation(List<CompiledLine> compiledLines)
+    {
+        return getMergedRepresentation(compiledLines, CompiledLine::getBinaryRepresentation);
     }
 
     public static int getColoredRepresentationEnd(String coloredMergedRepresentation, int startIndex,
@@ -51,7 +49,6 @@ public class CompiledLine
         int currentIndex = startIndex;
         int size = coloredMergedRepresentation.length();
         String toIgnore = "<span class=\"abc\"></span>";
-
         while (bytesCount != totalSizeInBytes)
         {
             if (currentIndex >= size) throw new RuntimeException("Wrong size in bytes"); // Should never happen
@@ -69,21 +66,7 @@ public class CompiledLine
 
     public static Map<Integer, String> getMergedColoredRepresentation(List<CompiledLine> compiledLines)
     {
-        Map<Integer, List<CompiledLine>> listRepresentation = getListRepresentation(compiledLines);
-        Map<Integer, String> mergedRepresentation = new HashMap<>();
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for (Map.Entry<Integer, List<CompiledLine>> entry : listRepresentation.entrySet())
-        {
-            for (CompiledLine compiledLine : entry.getValue())
-            {
-                stringBuilder.append(compiledLine.getColoredRepresentation());
-            }
-            mergedRepresentation.put(entry.getKey(), stringBuilder.toString());
-            stringBuilder.setLength(0);
-        }
-
-        return mergedRepresentation;
+        return getMergedRepresentation(compiledLines, CompiledLine::getColoredRepresentation);
     }
 
     public static Map<Integer, List<CompiledLine>> getListRepresentation(List<CompiledLine> compiledLines)
@@ -161,8 +144,11 @@ public class CompiledLine
         char cssClass = 'a';
         for (String element : splitRepresentation)
         {
-            coloredRepresentation.append("<span class=\"").append(cssClass).append("\">")
-                    .append(element).append("</span>");
+            for (String strByte : Util.addSpaceToHexString(element).split(" "))
+            {
+                coloredRepresentation.append("<span class=\"").append(cssClass).append("\">")
+                        .append(strByte).append("</span>");
+            }
             cssClass++;
         }
 
