@@ -2,7 +2,10 @@ package eypdc.assembler;
 
 import eypdc.assembler.errors.*;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.util.*;
@@ -19,14 +22,15 @@ public class Assembler
 
     public static void compile(String sourcePath)
     {
-        Assembler assembler = new Assembler();
-        Printer printer = new Printer();
-        List<String> lines;
-
         String filename = Paths.get(sourcePath).getFileName().toString();
         if (!filename.endsWith(".asc")) throw new RuntimeException("Unsupported file format (must be *.asc");
         String rawFilename = filename.substring(0, filename.length() - 4);
 
+        Assembler assembler = new Assembler();
+        Printer printer = new Printer(rawFilename);
+        List<String> lines;
+
+        // Read input file
         try (BufferedReader inputStream = new BufferedReader(
                 new FileReader(sourcePath, Charset.forName("windows-1252"))))
         {
@@ -41,20 +45,8 @@ public class Assembler
             throw new RuntimeException("An error occurred while reading the input file", e);
         }
 
-        PrintWriter printerToLst;
-        try
-        {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(rawFilename + ".lst"));
-            printerToLst = new PrintWriter(bufferedWriter);
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException("Could not create .lst output file");
-        }
-
-
+        // Compile
         List<CompiledLine> compiledLines = new ArrayList<>();
-
         try
         {
             Map<String, Integer> labels = assembler.firstPass(lines, compiledLines);
@@ -63,60 +55,15 @@ public class Assembler
         catch (CompileError compileError)
         {
             compileError.printStackTrace();
-            printerToLst.println(compileError.getMessage());
-            printerToLst.close();
+            printer.printErrorToList(compileError.getMessage());
             return;
         }
 
-        PrintWriter printerToS19;
-        try
-        {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(rawFilename + ".s19"));
-            printerToS19 = new PrintWriter(bufferedWriter);
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException("Could not create .s19 output file");
-        }
-
-        PrintWriter printerToColoredLst;
-        try
-        {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(rawFilename + "_lst.html"));
-            printerToColoredLst = new PrintWriter(bufferedWriter);
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException("Could not create colored list output file");
-        }
-
-        PrintWriter printerToOfficialFormatS19;
-        try
-        {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(rawFilename + "_official.s19"));
-            printerToOfficialFormatS19 = new PrintWriter(bufferedWriter);
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException("Could not create oficial format output file");
-        }
-
-        PrintWriter printerToColoredOfficialFormatS19;
-        try
-        {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(rawFilename + "_official_colored.html"));
-            printerToColoredOfficialFormatS19 = new PrintWriter(bufferedWriter);
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException("Could not create oficial format output file");
-        }
-
-        printer.printList(printerToLst, compiledLines, lines);
-        printer.printObjectCode(printerToS19, compiledLines);
-        printer.printColoredList(printerToColoredLst, compiledLines, lines);
-        printer.printOfficialObjectCode(printerToOfficialFormatS19, compiledLines);
-        printer.printColoredOfficialObjectCode(printerToColoredOfficialFormatS19, compiledLines);
+        printer.printList(compiledLines, lines);
+        printer.printObjectCode(compiledLines);
+        printer.printColoredList(compiledLines, lines);
+        printer.printOfficialObjectCode(compiledLines);
+        printer.printColoredOfficialObjectCode(compiledLines);
     }
 
     private void secondPass(List<CompiledLine> outputLines, Map<String, Integer> labels) throws CompileError
@@ -600,6 +547,4 @@ public class Assembler
     {
         return Integer.parseUnsignedInt(opcode.replaceAll("\\s", ""), 16);
     }
-
-
 }

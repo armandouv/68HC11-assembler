@@ -1,13 +1,32 @@
 package eypdc.assembler;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
 public class Printer
 {
-    public void printList(PrintWriter printer, List<CompiledLine> compiledLines, List<String> originalLines)
+    private final String rawFilename;
+
+    public Printer(String rawFilename)
     {
+        this.rawFilename = rawFilename;
+    }
+
+    public void printErrorToList(String errorMessage)
+    {
+        PrintWriter printer = createOutputFile(rawFilename + ".lst");
+        printer.println(errorMessage);
+        printer.close();
+    }
+
+    public void printList(List<CompiledLine> compiledLines, List<String> originalLines)
+    {
+        PrintWriter printer = createOutputFile(rawFilename + ".lst");
+
         if (compiledLines.size() != originalLines.size())
             throw new RuntimeException("Compiled lines and original don't match");
         for (int i = 0; i < compiledLines.size(); i++)
@@ -19,8 +38,10 @@ public class Printer
         printer.close();
     }
 
-    public void printColoredList(PrintWriter printer, List<CompiledLine> compiledLines, List<String> originalLines)
+    public void printColoredList(List<CompiledLine> compiledLines, List<String> originalLines)
     {
+        PrintWriter printer = createOutputFile(rawFilename + "_lst.html");
+
         if (compiledLines.size() != originalLines.size())
             throw new RuntimeException("Compiled lines and original don't match");
 
@@ -44,8 +65,9 @@ public class Printer
         printer.close();
     }
 
-    public void printObjectCode(PrintWriter printer, List<CompiledLine> compiledLines)
+    public void printObjectCode(List<CompiledLine> compiledLines)
     {
+        PrintWriter printer = createOutputFile(rawFilename + ".s19");
         int lineSizeInBytes = 16;
         Map<Integer, String> mergedRepresentation = CompiledLine.getMergedRepresentation(compiledLines);
 
@@ -69,8 +91,9 @@ public class Printer
         printer.close();
     }
 
-    public void printOfficialObjectCode(PrintWriter printer, List<CompiledLine> compiledLines)
+    public void printOfficialObjectCode(List<CompiledLine> compiledLines)
     {
+        PrintWriter printer = createOutputFile(rawFilename + "_official.s19");
         Map<Integer, String> mergedRepresentation = CompiledLine.getMergedRepresentation(compiledLines);
         StringBuilder output = new StringBuilder();
 
@@ -89,8 +112,9 @@ public class Printer
         printer.close();
     }
 
-    public void printColoredOfficialObjectCode(PrintWriter printer, List<CompiledLine> compiledLines)
+    public void printColoredOfficialObjectCode(List<CompiledLine> compiledLines)
     {
+        PrintWriter printer = createOutputFile(rawFilename + "_official_colored.html");
         printer.println("<style>" +
                         ".a { color: red }" +
                         ".b { color: blue }" +
@@ -115,5 +139,18 @@ public class Printer
 
         printer.println(output);
         printer.close();
+    }
+
+    private PrintWriter createOutputFile(String filename)
+    {
+        try
+        {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filename));
+            return new PrintWriter(bufferedWriter);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Could not create " + filename);
+        }
     }
 }
