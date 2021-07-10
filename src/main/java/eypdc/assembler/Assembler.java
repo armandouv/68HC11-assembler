@@ -232,6 +232,9 @@ public class Assembler
         String jmpExtOpcodeString = instructionSet.getStandardOpcodes("jmp").get("EXT");
         int jmpExtOpcode = opcodeStringToInt(jmpExtOpcodeString);
 
+        String jsrExtOpcodeString = instructionSet.getStandardOpcodes("jsr").get("EXT");
+        int jsrExtOpcode = opcodeStringToInt(jsrExtOpcodeString);
+
         for (int i = 0; i < outputLines.size(); i++)
         {
             CompiledLine compiledLine = outputLines.get(i);
@@ -246,7 +249,7 @@ public class Assembler
                 // IGNORES INDEX (REFACTOR IF NECESSARY)
                 int targetAddress = labels.get(label);
 
-                if (compiledLine.getOpcode().equals(jmpExtOpcode))
+                if (compiledLine.getOpcode().equals(jmpExtOpcode) || compiledLine.getOpcode().equals(jsrExtOpcode))
                 {
                     if (targetAddress > 0xFFFF) throw new VeryLargeAbsoluteJumpError(i);
                     operands.add(targetAddress);
@@ -301,16 +304,28 @@ public class Assembler
                     continue;
                 }
 
-                // If it is not a label, then it is an invalid instruction.
-                if (splitLine.length != 1) throw new NonexistentMarginSpaceError(i);
+                if (splitLine[0].equalsIgnoreCase("RESET"))
+                {
+                    if (splitLine.length == 1)
+                    {
+                        outputLines.add(compiledLine);
+                        continue;
+                    }
+                    else splitLine = Arrays.copyOfRange(splitLine, 1, splitLine.length);
+                }
+                else
+                {
+                    // If it is not a label, then it is an invalid instruction.
+                    if (splitLine.length != 1) throw new NonexistentMarginSpaceError(i);
 
-                // Add label
-                if (targetAddress == null) throw new NonexistentOrgDirective(i);
-                String label = splitLine[0].replaceAll(":", "");
-                if (labels.containsKey(label)) throw new ExistingLabelError(i);
-                labels.put(label, targetAddress);
-                outputLines.add(compiledLine);
-                continue;
+                    // Add label
+                    if (targetAddress == null) throw new NonexistentOrgDirective(i);
+                    String label = splitLine[0].replaceAll(":", "");
+                    if (labels.containsKey(label)) throw new ExistingLabelError(i);
+                    labels.put(label, targetAddress);
+                    outputLines.add(compiledLine);
+                    continue;
+                }
             }
 
             // Line does have space at start, handle directives.
@@ -323,7 +338,6 @@ public class Assembler
                 continue;
             }
 
-            // TODO: Handle RESET
 
             if (splitLine[0].equalsIgnoreCase("END"))
             {
@@ -351,9 +365,9 @@ public class Assembler
                 }
                 compiledLine.setAddress(targetAddress);
                 compiledLine.setOpcode(formedBytes.get(0));
-                for (int formedByte : formedBytes)
+                for (int j = 1; j < formedBytes.size(); j++)
                 {
-                    compiledLine.getOperands().add(formedByte);
+                    compiledLine.getOperands().add(formedBytes.get(j));
                 }
                 compiledLine.setSizeInBytes(formedBytes.size());
                 outputLines.add(compiledLine);
@@ -673,7 +687,7 @@ public class Assembler
         char firstChar = operand.charAt(0);
         if (firstChar == '$') result = Integer.parseUnsignedInt(operand.substring(1), 16);
         else if (firstChar == '%') result = Integer.parseUnsignedInt(operand.substring(1), 2);
-        else if (firstChar == '\'') result = Character.getNumericValue(operand.charAt(1));
+        else if (firstChar == '\'') result = operand.charAt(1);
         else result = Integer.parseUnsignedInt(operand, 10);
 
         return result;
