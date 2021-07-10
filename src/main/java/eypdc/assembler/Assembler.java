@@ -113,7 +113,7 @@ public class Assembler
 
         for (int i = 0; i < inputLines.size(); i++)
         {
-            String line = inputLines.get(i);
+            String line = inputLines.get(i).toUpperCase();
             int commentIndex = line.indexOf('*');
             if (commentIndex != -1) line = line.substring(0, commentIndex);
 
