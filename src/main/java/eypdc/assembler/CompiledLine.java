@@ -88,6 +88,14 @@ public class CompiledLine
         return (int) (Math.pow(2, sizeInBits) - 1);
     }
 
+    public static String toHexString(Integer value)
+    {
+        if (value < 0) throw new RuntimeException("Negative values are not supported");
+        int hexDigits = Integer.toHexString(value).length();
+        int sizeInBytes = hexDigits % 2 == 0 ? hexDigits / 2 : hexDigits / 2 + 1;
+        return String.format("%0" + (sizeInBytes * 2) + "x", value).toUpperCase();
+    }
+
     private String getHexRepresentation(Integer value, int sizeInBytes)
     {
         if (value >= 0)

@@ -68,7 +68,7 @@ public class Printer
     public void printObjectCode(List<CompiledLine> compiledLines)
     {
         PrintWriter printer = createOutputFile(rawFilename + ".s19");
-        int lineSizeInBytes = 16;
+        int maxLineSizeInBytes = 16;
         Map<Integer, String> mergedRepresentation = CompiledLine.getMergedRepresentation(compiledLines);
 
         for (Map.Entry<Integer, String> entry : mergedRepresentation.entrySet())
@@ -78,37 +78,53 @@ public class Printer
 
             int address = startAddress;
             int totalLength = binaryRepresentation.length();
-            for (int i = 0; i < totalLength; i += lineSizeInBytes * 2)
+            for (int i = 0; i < totalLength; i += maxLineSizeInBytes * 2)
             {
-                int endIndex = Math.min(totalLength, i + lineSizeInBytes * 2);
+                int endIndex = Math.min(totalLength, i + maxLineSizeInBytes * 2);
                 String line = binaryRepresentation.substring(i, endIndex);
                 String spacedLine = CompiledLine.addSpaceToHexString(line);
                 printer.println("<" + Integer.toHexString(address) + "> " + spacedLine);
-                address += lineSizeInBytes;
+                address += maxLineSizeInBytes;
             }
         }
 
         printer.close();
     }
 
+    private int calculateChecksum(String objectCode)
+    {
+        if (objectCode.length() % 2 != 0) throw new RuntimeException("Line must contain a whole number of bytes");
+        // TODO: Implement
+        return 0;
+    }
+
     public void printOfficialObjectCode(List<CompiledLine> compiledLines)
     {
         PrintWriter printer = createOutputFile(rawFilename + "_official.s19");
+        int maxLineSizeInBytes = 16;
         Map<Integer, String> mergedRepresentation = CompiledLine.getMergedRepresentation(compiledLines);
-        StringBuilder output = new StringBuilder();
-
-        output.append("S110");
 
         for (Map.Entry<Integer, String> entry : mergedRepresentation.entrySet())
         {
             int startAddress = entry.getKey();
-            String compiledCode = entry.getValue();
-            output.append(startAddress).append(compiledCode);
+            String binaryRepresentation = entry.getValue();
+
+            int address = startAddress;
+            int totalLength = binaryRepresentation.length();
+            for (int i = 0; i < totalLength; i += maxLineSizeInBytes * 2)
+            {
+                int endIndex = Math.min(totalLength, i + maxLineSizeInBytes * 2);
+                String line = binaryRepresentation.substring(i, endIndex);
+                int lineSizeInBytes = line.length() / 2;
+
+                String formattedLine =
+                        CompiledLine.toHexString(lineSizeInBytes + 3) + CompiledLine.toHexString(address) + line;
+                printer.println("S1" + formattedLine + calculateChecksum(formattedLine));
+                address += maxLineSizeInBytes;
+            }
         }
 
-        output.append("19S9030000FC");
-
-        printer.println(output);
+        printer.println("S9030000FC");
         printer.close();
     }
 
