@@ -82,7 +82,7 @@ public class Printer
             {
                 int endIndex = Math.min(totalLength, i + maxLineSizeInBytes * 2);
                 String line = binaryRepresentation.substring(i, endIndex);
-                String spacedLine = CompiledLine.addSpaceToHexString(line);
+                String spacedLine = Util.addSpaceToHexString(line);
                 printer.println("<" + Integer.toHexString(address) + "> " + spacedLine);
                 address += maxLineSizeInBytes;
             }
@@ -91,17 +91,23 @@ public class Printer
         printer.close();
     }
 
-    private int calculateChecksum(String objectCode)
+    private String calculateChecksum(String objectCode)
     {
         if (objectCode.length() % 2 != 0) throw new RuntimeException("Line must contain a whole number of bytes");
-        // TODO: Implement
-        return 0;
+        String[] splitLine = Util.addSpaceToHexString(objectCode).split(" ");
+        int totalSum = 0;
+        for (String hexByte : splitLine)
+        {
+            totalSum += Integer.parseInt(hexByte, 16);
+        }
+        byte truncatedSum = (byte) ~((byte) totalSum);
+        return Util.getHexRepresentation((int) truncatedSum, 1);
     }
 
     public void printOfficialObjectCode(List<CompiledLine> compiledLines)
     {
         PrintWriter printer = createOutputFile(rawFilename + "_official.s19");
-        int maxLineSizeInBytes = 16;
+        int maxLineSizeInBytes = 32;
         Map<Integer, String> mergedRepresentation = CompiledLine.getMergedRepresentation(compiledLines);
 
         for (Map.Entry<Integer, String> entry : mergedRepresentation.entrySet())
@@ -118,7 +124,7 @@ public class Printer
                 int lineSizeInBytes = line.length() / 2;
 
                 String formattedLine =
-                        CompiledLine.toHexString(lineSizeInBytes + 3) + CompiledLine.toHexString(address) + line;
+                        Util.toHexString(lineSizeInBytes + 3) + Util.toHexString(address) + line;
                 printer.println("S1" + formattedLine + calculateChecksum(formattedLine));
                 address += maxLineSizeInBytes;
             }
